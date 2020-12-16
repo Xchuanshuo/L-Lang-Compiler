@@ -8,7 +8,7 @@ import com.legend.semantic.Variable;
  * @data by on 20-11-19.
  * @description 存放一个函数运行时的本地变量
  */
-public class FunctionObject extends LObject {
+public class FunctionObject extends Env {
 
     // 类型
     protected Function function = null;

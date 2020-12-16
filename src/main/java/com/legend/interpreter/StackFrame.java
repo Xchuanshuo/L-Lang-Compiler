@@ -22,11 +22,11 @@ public class StackFrame {
     StackFrame parentFrame = null;
 
     // 实际存放变量的地方(保存了作用域在内的变量,以及自由变量)
-    LObject object = null;
+    Env object = null;
 
     public StackFrame(BlockScope scope) {
         this.scope = scope;
-        this.object = new LObject();
+        this.object = new Env();
     }
 
     public StackFrame(ClassObject object) {

@@ -3,6 +3,8 @@ package com.legend.compiler;
 import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
 import com.legend.interpreter.LInterpreter;
+import com.legend.ir.TACGenerator;
+import com.legend.ir.TACProgram;
 import com.legend.lexer.Lexer;
 import com.legend.lexer.Token;
 import com.legend.parser.Parser;
@@ -24,7 +26,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/array.l";
+                "L-Lang-Compiler/example/ir_test.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -32,7 +34,7 @@ public class Compiler {
         Program program = Parser.fromFile(path);
         AnnotatedTree at = new AnnotatedTree();
         at.setAstRoot(program);
-//        program.dumpAST();
+        program.dumpAST();
 
         ASTIterator astIterator = new ASTIterator();
         // 语义分析, 采用多阶段扫描
@@ -62,7 +64,12 @@ public class Compiler {
         analyzer.analyzeClosure();
 
         // AST解释器
-        LInterpreter interpreter = new LInterpreter(at);
-        program.accept(interpreter);
+//        LInterpreter interpreter = new LInterpreter(at);
+//        program.accept(interpreter);
+        TACProgram tacProgram = new TACProgram();
+        TACGenerator irGenerator = new TACGenerator(at, tacProgram);
+        program.accept(irGenerator);
+
+        tacProgram.dump();
     }
 }

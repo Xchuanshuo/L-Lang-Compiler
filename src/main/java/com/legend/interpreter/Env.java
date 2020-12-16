@@ -10,7 +10,7 @@ import java.util.Map;
  * @data by on 20-11-19.
  * @description 用来保存对象运行时的数据
  */
-public class LObject {
+public class Env {
 
     // 成员变量
     protected Map<Variable, Object> fields = new HashMap<>();

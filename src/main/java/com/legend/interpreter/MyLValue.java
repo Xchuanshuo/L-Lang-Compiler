@@ -5,9 +5,9 @@ import com.legend.semantic.Variable;
 
 public class MyLValue implements LValue {
     private Variable variable;
-    private LObject container;
+    private Env container;
 
-    public MyLValue(LObject container, Variable variable) {
+    public MyLValue(Env container, Variable variable) {
         this.container = container;
         this.variable = variable;
     }

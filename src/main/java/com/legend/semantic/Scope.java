@@ -1,6 +1,9 @@
 package com.legend.semantic;
 
 
+import com.legend.lexer.Token;
+import com.legend.lexer.TokenType;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,6 +16,7 @@ public class Scope extends Symbol {
 
     // 当前作用域的符号表
     protected List<Symbol> symbols = new ArrayList<>();
+    private static int counter = 0;
 
     // 添加一个新的符号到当前作用域所持有的符号表
     public void addSymbol(Symbol symbol) {
@@ -87,6 +91,18 @@ public class Scope extends Symbol {
     // 是否包含某个symbol
     public boolean containsSymbol(Symbol symbol) {
         return symbols.contains(symbol);
+    }
+
+    public Variable createTempVariable() {
+        return createTempVariable(null);
+    }
+
+    public Variable createTempVariable(Type type) {
+        Token token = new Token(TokenType.IDENTIFIER, "v" + counter++);
+        Variable variable = new Variable(token.getText(), this, null);
+        variable.setType(type);
+        addSymbol(variable);
+        return variable;
     }
 
     public List<Symbol> getSymbols() {

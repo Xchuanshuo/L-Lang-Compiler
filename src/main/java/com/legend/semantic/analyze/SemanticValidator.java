@@ -11,13 +11,16 @@ import com.legend.semantic.VoidType;
  * @author Legend
  * @data by on 20-11-18.
  * @description ast第5遍扫描: 语义校验器
- * 1.break 只能出现在循环语句或case语句中
+ * 1.break
+ *  只能出现在循环语句或case语句中
  *
  * 2.return 语句
  *   1) 函数声明了返回值,就一定要有return语句,除非返回值是void类型
  *   2)类的构造函数里如果用到return,不能带返回值
  *   3)return语句只能出现在函数里
  *   4)返回值类型检查(TypeChecker里做)
+ *
+ * break语句和return后的代码是死代码 应该消除
  *
  * 3.左值
  *   1)标注左值(不标注就是右值)
@@ -77,10 +80,15 @@ public class SemanticValidator extends BaseASTListener {
                 } else if (function.returnType() != VoidType.instance()) {
                     at.log("can not match a correct return value type", ast);
                 }
+                if (isExistDeadCode(ast)) {
+                    at.log("exist unreachable statement after return!", ast);
+                }
             }
         } else if (ast.BREAK() != null) {
             if (!checkBreak(ast)) {
                 at.log("break statement not in loop or switch statements", ast);
+            } else if (isExistDeadCode(ast)) {
+                at.log("exist unreachable statement after break!", ast);
             }
         }
     }
@@ -112,5 +120,23 @@ public class SemanticValidator extends BaseASTListener {
             return false;
         }
         return checkBreak(parent);
+    }
+
+    private boolean isExistDeadCode(ASTNode ast) {
+        ASTNode parent = null;
+        if (ast.getParent() instanceof Statement) {
+            // break or return statement -> statement
+            parent = ast.getParent();
+            if (parent.lastChild() != ast) {
+                return true;
+            }
+        } else {
+            // break or return statement -> BlockStatement -> BlockStatements
+            parent = ast.getParent().getParent();
+            if (parent.lastChild().getChild(0) != ast) {
+                return true;
+            }
+        }
+        return false;
     }
 }

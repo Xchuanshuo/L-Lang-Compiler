@@ -34,7 +34,7 @@ public class Variable extends Symbol {
 
     @Override
     public String toString() {
-        return super.toString();
+        return name;
     }
 
     public static class This extends Variable {

@@ -89,6 +89,20 @@ public class Token {
                 tokenType == TokenType.CHAR_LITERAL;
     }
 
+    public boolean isAssignOperator() {
+        return tokenType == TokenType.ASSIGN ||
+                tokenType == TokenType.ADD_ASSIGN ||
+                tokenType == TokenType.SUB_ASSIGN ||
+                tokenType == TokenType.MUL_ASSIGN ||
+                tokenType == TokenType.DIV_ASSIGN ||
+                tokenType == TokenType.MOD_ASSIGN ||
+                tokenType == TokenType.LSHIFT_ASSIGN ||
+                tokenType == TokenType.RSHIFT_ASSIGN ||
+                tokenType == TokenType.OR_ASSIGN ||
+                tokenType == TokenType.XOR_ASSIGN ||
+                tokenType == TokenType.AND_ASSIGN;
+    }
+
     public boolean isValue() {
         return isLiteral() || isId();
     }

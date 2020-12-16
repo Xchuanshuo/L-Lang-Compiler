@@ -45,9 +45,27 @@ public class ASTNode {
         child.parent = this;
     }
 
+    public void setParent(ASTNode parent) {
+        this.parent = parent;
+    }
+
     public void removeChild(ASTNode child) {
         if (child == null) return;
         children.remove(child);
+    }
+
+    public ASTNode firstChild() {
+        if (children.size() > 0) {
+            return children.get(0);
+        }
+        return null;
+    }
+
+    public ASTNode lastChild() {
+        if (children.size() > 0) {
+            return children.get(children.size() - 1);
+        }
+        return null;
     }
 
     public ASTNode getParent() {
@@ -114,7 +132,7 @@ public class ASTNode {
         }
     }
 
-    public <T> T accept(ASTVisitor<? extends T> visitor) {
+    public <T> T  accept(ASTVisitor<? extends T> visitor) {
         if (visitor == null) return null;
         String cur = this.getClass().getSimpleName();
         String methodName = "visit" + cur;

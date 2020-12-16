@@ -256,6 +256,8 @@ public class RefResolver extends BaseASTListener {
     public void exitVariableInitializer(VariableInitializer ast) {
         if (ast.expr() != null) {
             at.typeOfNode.put(ast, at.typeOfNode.get(ast.expr()));
+        } else if (ast.arrayInitializer() != null) {
+            at.typeOfNode.put(ast, at.typeOfNode.get(ast.arrayInitializer()));
         }
     }
 
@@ -356,14 +358,24 @@ public class RefResolver extends BaseASTListener {
 
     @Override
     public void exitArrayCall(ArrayCall ast) {
-        Scope scope = at.enclosingScopeOfNode(ast);
-        Variable variable = at.lookupVariable(scope, ast.identifier().getText());
-        ArrayType originalType = (ArrayType) variable.getType();
-        Type type = null;
-        for (int i = 0;i < ast.exprList().size();i++) {
-            type = originalType.baseType();
-            if (type instanceof ArrayType) {
-                originalType = (ArrayType) type;
+        String name = ast.identifier().getText();
+        Type type = at.lookupType(name);
+        if (type != null || ast.identifier().getToken().isBaseType()) { // 实例化一个数组
+            type = type == null ? PrimitiveType.getBaseTypeByText(name) : type;
+            for (int i = 0;i < ast.exprList().size();i++) {
+                ArrayType arrayType = new ArrayType();
+                arrayType.setBaseType(type);
+                type = arrayType;
+            }
+        } else { // 数组调用
+            Scope scope = at.enclosingScopeOfNode(ast);
+            Variable variable = at.lookupVariable(scope, ast.identifier().getText());
+            ArrayType originalType = (ArrayType) variable.getType();
+            for (int i = 0;i < ast.exprList().size();i++) {
+                type = originalType.baseType();
+                if (type instanceof ArrayType) {
+                    originalType = (ArrayType) type;
+                }
             }
         }
         at.typeOfNode.put(ast, type);
@@ -519,6 +531,20 @@ public class RefResolver extends BaseASTListener {
         } else if (ast instanceof Literal.NullLiteral) {
             at.typeOfNode.put(ast, PrimitiveType.Null);
         }
+    }
+
+    @Override
+    public void exitArrayInitializer(ArrayInitializer ast) {
+        Type baseType = null;
+        if (ast.variableInitializerList() != null) {
+            baseType = at.typeOfNode.get(ast.variableInitializerList().get(0));
+            if (baseType == null) {
+                baseType = PrimitiveType.Null;
+            }
+        }
+        ArrayType arrayType = new ArrayType();
+        arrayType.setBaseType(baseType);
+        at.typeOfNode.put(ast, arrayType);
     }
 
     private boolean isInFirstStatement(FunctionCall ast, FunctionDeclaration fd) {

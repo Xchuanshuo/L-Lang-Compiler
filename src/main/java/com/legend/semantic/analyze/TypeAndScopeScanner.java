@@ -110,6 +110,7 @@ public class TypeAndScopeScanner extends BaseASTListener {
         // 初次扫描函数信息不完整 后续扫描进行补充
         Function function = new Function(name, currentScope(), ast);
         at.types.add(function);
+        at.symbolOfNode.put(ast, function);
         Objects.requireNonNull(currentScope()).addSymbol(function);
         pushScope(function, ast);
     }
@@ -124,6 +125,7 @@ public class TypeAndScopeScanner extends BaseASTListener {
         String name = ast.className().getText();
         Class theClass = new Class(name, ast);
         at.types.add(theClass);
+        at.symbolOfNode.put(ast, theClass);
         if (at.lookupClass(currentScope(), name) != null) {
             at.log("Duplicated class defined", ast);
         }

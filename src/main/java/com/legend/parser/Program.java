@@ -1,11 +1,9 @@
 package com.legend.parser;
 
-import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
 import com.legend.parser.ast.*;
 import com.legend.parser.common.PeekTokenIterator;
 
-import java.io.IOException;
 import java.util.*;
 
 /**

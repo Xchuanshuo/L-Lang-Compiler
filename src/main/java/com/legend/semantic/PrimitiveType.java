@@ -1,5 +1,10 @@
 package com.legend.semantic;
 
+import com.legend.lexer.Keyword;
+import com.legend.lexer.Token;
+
+import static com.legend.lexer.Keyword.Key.*;
+
 /**
  * @author Legend
  * @data by on 20-11-14.
@@ -72,6 +77,22 @@ public class PrimitiveType implements Type {
         } else {
             return false;
         }
+    }
+
+    public static Type getBaseTypeByText(String text) {
+        Type type = PrimitiveType.Null;
+        if (Keyword.getValueByKey(INT).equals(text)) {
+            type = PrimitiveType.Integer;
+        } else if (Keyword.getValueByKey(FLOAT).equals(text)) {
+            type = PrimitiveType.Float;
+        } else if (Keyword.getValueByKey(CHAR).equals(text)) {
+            type = PrimitiveType.Char;
+        } else if (Keyword.getValueByKey(STRING).equals(text)) {
+            type = PrimitiveType.String;
+        } else if (Keyword.getValueByKey(BOOLEAN).equals(text)) {
+            type = PrimitiveType.Boolean;
+        }
+        return type;
     }
 
     @Override

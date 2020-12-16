@@ -10,6 +10,7 @@ import com.legend.parser.common.PriorityTable;
 import java.util.ArrayList;
 import java.util.List;
 
+import static com.legend.lexer.Keyword.Key.IF;
 import static com.legend.lexer.Keyword.Key.SUPER;
 import static com.legend.lexer.Keyword.Key.THIS;
 
@@ -59,20 +60,33 @@ public class Expr extends ASTNode {
         if (node1 != null) {
             while (it.hasNext()) {
                 Token token = it.peek();
-                if (table.getOperator(k).contains(token.getText())) {
-                    it.next();
-                    ASTNode node2 = e(it, k + 1);
-                    if (node2 == null) {
-                        throw new ParseException(token);
-                    }
-                    Expr expr1 = new Expr(ASTNodeType.BINARY_EXP, token);
-                    expr1.addChild(node1);
-                    expr1.addChild(node2);
-                    node1 = expr1;
-                } else {
-                    break;
+                if (!table.getOperator(k).contains(token.getText())) break;
+                it.next();
+                ASTNode node2 = e(it, k + 1);
+                if (node2 == null) {
+                    throw new ParseException(token);
                 }
+                Expr expr1 = new Expr(ASTNodeType.BINARY_EXP, token);
+                expr1.addChild(node1);
+                expr1.addChild(node2);
+                node1 = expr1;
             }
+        }
+        // 解决 = | += | =+.. 赋值运算符的右结合性问题 node1为当前节点
+        // 1.将[当前节点]左子树的右孩子变成[当前节点]的左孩子
+        // 2.将[当前节点]左子树链接到[当前节点的父亲节点]
+        // 3.将[当前节点]变成左子树的右孩子
+        while (node1 != null && node1.astNodeType == ASTNodeType.BINARY_EXP
+                && node1.getToken().isAssignOperator()) {
+            ASTNode leftChild = ((Expr) node1).leftChild();
+            boolean condition = leftChild instanceof Expr &&
+                    leftChild.astNodeType == ASTNodeType.BINARY_EXP
+                    && leftChild.getToken().isAssignOperator();
+            if (!condition) break;
+            ((Expr) node1).setLeftChild(leftChild.getChild(1));
+            leftChild.setParent(node1.getParent());
+            ((Expr) leftChild).setRightChild(node1);
+            node1 = leftChild;
         }
         return node1;
     }
@@ -129,6 +143,25 @@ public class Expr extends ASTNode {
     public Expr expr(int idx) {
         return getASTNode(Expr.class, idx);
     }
+
+    public ASTNode leftChild() {
+        return getChild(0);
+    }
+
+    public void setLeftChild(ASTNode astNode) {
+        getChildren().set(0, astNode);
+        astNode.setParent(this);
+    }
+
+    public ASTNode rightChild() {
+        return getChild(1);
+    }
+
+    public void setRightChild(ASTNode astNode) {
+        getChildren().set(1, astNode);
+        astNode.setParent(this);
+    }
+
 
     public List<Expr> exprs() {
         return getASTNodes(Expr.class);

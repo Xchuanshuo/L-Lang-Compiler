@@ -5,7 +5,7 @@ package com.legend.interpreter;
  * @data by on 20-11-22.
  * @description 模块对象
  */
-public class ModuleObject extends LObject {
+public class ModuleObject extends Env {
 
 
 }

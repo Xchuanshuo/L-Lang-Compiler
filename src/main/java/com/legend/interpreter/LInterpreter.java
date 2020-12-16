@@ -601,7 +601,7 @@ public class LInterpreter extends BaseASTVisitor<Object> {
 
     public LValue getLValue(Variable variable) {
         StackFrame frame = stack.peek();
-        LObject valueContainer = null;
+        Env valueContainer = null;
         while (frame != null) {
             if (frame.scope.containsSymbol(variable)) {
                 valueContainer = frame.object;
@@ -628,7 +628,7 @@ public class LInterpreter extends BaseASTVisitor<Object> {
      * @param function 目标函数
      * @param container 存放运行时变量的容器
      */
-    private void packageClosureValues(Function function, LObject container) {
+    private void packageClosureValues(Function function, Env container) {
         if (function.getClosureVariables() != null) {
             for (Variable variable :function.getClosureVariables()) {
                 LValue lValue = getLValue(variable);
@@ -644,7 +644,7 @@ public class LInterpreter extends BaseASTVisitor<Object> {
      * @param classObject 类对象
      */
     private void packageClosureValues(ClassObject classObject) {
-        LObject container = new LObject();
+        Env container = new Env();
         for (Variable variable : classObject.fields.keySet()) {
             if (variable.getType() instanceof FunctionType) {
                 Object object = classObject.fields.get(variable);

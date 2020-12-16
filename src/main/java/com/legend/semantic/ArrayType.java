@@ -1,5 +1,6 @@
 package com.legend.semantic;
 
+
 /**
  * @author Legend
  * @data by on 20-11-14.
@@ -9,6 +10,12 @@ public class ArrayType implements Type {
 
     private Type baseType;
     private int length;
+
+    public ArrayType() {}
+
+    public ArrayType(Type baseType) {
+        this.baseType = baseType;
+    }
 
     public void setBaseType(Type baseType) {
         this.baseType = baseType;
@@ -44,5 +51,13 @@ public class ArrayType implements Type {
             return this.baseType.isType(((ArrayType) type).baseType);
         }
         return false;
+    }
+
+    @Override
+    public String toString() {
+        if (!isMultiDimension()) {
+            return baseType + "[";
+        }
+        return baseType.toString() +  "[";
     }
 }
