@@ -28,6 +28,7 @@ public class TypeResolver extends BaseASTListener {
         // int a = 1, b, c = 5;
         for (VariableDeclarator v : ast.variableDeclaratorList()) {
             Variable variable = (Variable) at.symbolOfNode.get(v.identifier());
+            variable.setStatic(ast.STATIC() != null);
             variable.setType(type);
             at.typeOfNode.put(v.identifier(), type);
         }

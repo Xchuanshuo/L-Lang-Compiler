@@ -101,4 +101,9 @@ public class Function extends Scope implements FunctionType {
     public Set<Variable> getClosureVariables() {
         return closureVariables;
     }
+
+    @Override
+    public String toString() {
+        return enclosingScope + "_" + name;
+    }
 }

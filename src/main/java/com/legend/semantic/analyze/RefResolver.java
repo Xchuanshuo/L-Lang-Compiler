@@ -118,10 +118,14 @@ public class RefResolver extends BaseASTListener {
             if (ast.getChild(0) instanceof ArrayCall && ast.getChild(1).getText().equals("length")) {
                 type = PrimitiveType.Integer;
             } else if (!(symbol instanceof Variable)){
-                // 不是变量的.表达式有两种情况 1.内部类 2.外部模块
+                // 不是变量的.表达式有两种情况 1.内部类 2.类的静态字段 3.外部模块
                 if (symbol instanceof Class) { // 内部类的情况
-                    type = findInnerClassDotType(ast, (Class) symbol);
-                } else if(symbol instanceof Scope) { // 外部模块(命名空间)
+                    type = findInnerClassDotStaticType(ast, (Class) symbol);
+                } else if(symbol instanceof Function) { // 左操作数为函数调用
+                    Function function = (Function) symbol;
+                    Class theClass = (Class) function.returnType();
+                    type = findClassDotType(ast, theClass);
+                } else if (symbol instanceof Scope) { // 外部模块(命名空间NameSpace)
                     type = findNameSpaceDotType(ast, (Scope) symbol);
                 }
                 if (type == null) {
@@ -129,20 +133,7 @@ public class RefResolver extends BaseASTListener {
                 }
             } else if (((Variable) symbol).getType() instanceof Class) {
                 Class theClass = (Class) ((Variable) symbol).getType();
-                if (ast.functionCall() != null) { // .后面接函数调用
-                    type = at.typeOfNode.get(ast.functionCall());
-                } else if (ast.arrayCall() != null) { // .后面接数组调用
-                    type = at.typeOfNode.get(ast.arrayCall());
-                } else { // .后面接字段
-                    String fieldName = ast.getChild(1).getText();
-                    Variable variable = theClass.getVariable(fieldName);
-                    if (variable == null) {
-                        at.log("unable find a field " + fieldName + "in Class " + theClass, ast);
-                    } else {
-                        at.symbolOfNode.put(ast, variable);
-                        type = variable.getType();
-                    }
-                }
+                type = findClassDotType(ast, theClass);
             } else if (((Variable) symbol).getType() instanceof ArrayType) {
                 String text = ast.getChild(1).getText();
                 if (text.equals("length")) {
@@ -156,16 +147,51 @@ public class RefResolver extends BaseASTListener {
         at.typeOfNode.put(ast, type);
     }
 
-    private Type findInnerClassDotType(Expr ast, Class theClass) {
+    private Type findClassDotType(Expr ast, Class theClass) {
         Type type = null;
-        if (ast.functionCall() != null) {
+        if (ast.functionCall() != null) { // .后面接函数调用
             type = at.typeOfNode.get(ast.functionCall());
+            at.symbolOfNode.put(ast, at.symbolOfNode.get(ast.functionCall()));
+        } else if (ast.arrayCall() != null) { // .后面接数组调用
+            type = at.typeOfNode.get(ast.arrayCall());
+        } else { // .后面接字段
+            String fieldName = ast.getChild(1).getText();
+            Variable variable = theClass.getVariable(fieldName);
+            if (variable == null) {
+                at.log("unable find a field " + fieldName + "in Class " + theClass, ast);
+            } else {
+                at.symbolOfNode.put(ast, variable);
+                type = variable.getType();
+            }
+        }
+        return type;
+    }
+
+    private Type findInnerClassDotStaticType(Expr ast, Class theClass) {
+        Type type = null;
+        if (ast.functionCall() != null) { // 静态方法或模块全局方法
+            type = at.typeOfNode.get(ast.functionCall());
+            at.symbolOfNode.put(ast, at.symbolOfNode.get(ast.functionCall()));
         } else {
-            String name = ast.getChild(1).getText();
+            if (ast.arrayCall() != null) {
+                type = at.typeOfNode.get(ast.arrayCall());
+                at.symbolOfNode.put(ast, at.symbolOfNode.get(ast.arrayCall()));
+                return type;
+            }
+            String name = "";
+            if (ast.rightChild() instanceof ArrayCall) {
+                name = ast.rightChild().getChild(0).getText();
+            } else {
+                name = ast.getChild(1).getText();
+            }
             Class newClass = theClass.getClass(name);
-            if (newClass != null) {
+            if (newClass != null) { // 内部类
                 type = newClass;
                 at.symbolOfNode.put(ast, newClass);
+            } else { // 静态字段
+                Variable variable = theClass.findStaticVariable(name);
+                type = variable.getType();
+                at.symbolOfNode.put(ast, variable);
             }
         }
         return type;
@@ -273,6 +299,11 @@ public class RefResolver extends BaseASTListener {
             return;
         }
         ASTNode parent = ast.getParent();
+        if (parent instanceof ArrayCall && parent.getParent() instanceof Expr
+                && ((Expr) parent.getParent()).isDotExpr()
+                && parent.getChild(0) == ast) {
+            return;
+        }
         if (parent instanceof FunctionDeclaration.FormalParameter) {
             processId(ast);
         }
@@ -324,14 +355,16 @@ public class RefResolver extends BaseASTListener {
                 at.symbolOfNode.put(ast, variable);
             } else {
                 Function function = at.lookupFunction(scope, name);
-                if (function != null) {
+                boolean isClassDot = ast.getParent() instanceof Expr
+                        && ((Expr) ast.getParent()).isDotExpr();
+                if (function != null && !isClassDot) {
                     // 函数调用单独消解了 这里查找到的函数只有一种情况 也就是直接获取函数对象
                     // 所以节点类型对应的应该是函数本身
                     at.typeOfNode.put(ast, function);
                     at.symbolOfNode.put(ast, function);
                 } else {
                     Class theClass = at.lookupClass(scope, name);
-                    if (theClass != null) { // 内部类
+                    if (theClass != null) { // 类
                         at.typeOfNode.put(ast, theClass);
                         at.symbolOfNode.put(ast, theClass);
                     } else if (at.isModuleName(name)){ // 导入外部模块
@@ -353,7 +386,11 @@ public class RefResolver extends BaseASTListener {
         }
         Variable variable = (Variable) at.symbolOfNode.get(id);
         // 引用消解时再将变量放入作用域的符号表中
-        scope.addSymbol(variable);
+        if (variable.isClassMember() && variable.isStatic()) {
+            ((Class)scope).addStatic(variable);
+        } else {
+            scope.addSymbol(variable);
+        }
     }
 
     @Override
@@ -370,6 +407,11 @@ public class RefResolver extends BaseASTListener {
         } else { // 数组调用
             Scope scope = at.enclosingScopeOfNode(ast);
             Variable variable = at.lookupVariable(scope, ast.identifier().getText());
+            Class theClass = at.enclosingClassOfNode(ast);
+            if (variable == null && theClass != null) {
+                variable = theClass.findStaticVariable(ast.identifier().getText());
+            }
+            at.symbolOfNode.put(ast.identifier(), variable);
             ArrayType originalType = (ArrayType) variable.getType();
             for (int i = 0;i < ast.exprList().size();i++) {
                 type = originalType.baseType();
@@ -401,14 +443,15 @@ public class RefResolver extends BaseASTListener {
 
     private void resolveFunctionCall(FunctionCall ast, String name, List<Type> paramTypes) {
         boolean found = false;
-        if (ast.getParent() instanceof Expr && ((Expr) ast.getParent()).isDotExpr()) {
-            // 处理a.fun()形式的点表达式(1.实例对象 2.内部类 3.跨模块调用(不同命名空间))
+        if (ast.getParent() instanceof Expr && ((Expr) ast.getParent()).isDotExpr()
+                && ast == ((Expr) ast.getParent()).rightChild()) {
+            // 处理a.fun()形式的点表达式(1.实例对象 2.内部类 3.跨模块调用(不同命名空间) 4.函数.函数)
             found = processDotExprFunCall((Expr) ast.getParent(), ast, name, paramTypes);
         }
         if(found) return;
         // 当前所属作用域查找函数与函数变量
         Scope scope = at.enclosingScopeOfNode(ast);
-        findDotFunctionByScope(scope, ast, name, paramTypes);
+        findFunctionByScope(scope, ast, name, paramTypes);
     }
 
     // 1.先尝试从类方法里面找 2. 1未找到则到类的符号表中去找对应签名的函数变量
@@ -419,11 +462,15 @@ public class RefResolver extends BaseASTListener {
         if (!(symbol instanceof Variable) || !(((Variable) symbol).getType() instanceof Class)) {
             if (symbol instanceof Class) { // 内部类
                 isFound = findInnerClassDotExpr(symbol, ast, name, paramTypes);
+            } else if (symbol instanceof Function) { // 函数返回的对象类里面寻找
+                Class theClass = (Class) ((Function) symbol).returnType();
+                isFound = findFunctionByScope(theClass, ast, name, paramTypes);
             } else if (symbol instanceof Scope) { // 命名空间(从其它模块查找)
                 Scope scope = (Scope) symbol;
-                isFound = findDotFunctionByScope(scope, ast, name, paramTypes);
+                isFound = findFunctionByScope(scope, ast, name, paramTypes);
             } else {
-                at.log("unable resolveVariable a class", ast);
+                System.out.println(symbol);
+                at.log("unable resolveVariable in a class", ast);
             }
         } else { // 实例化的对象里面去查找
             Class theClass = (Class) ((Variable) symbol).getType();
@@ -451,6 +498,12 @@ public class RefResolver extends BaseASTListener {
     private boolean findInnerClassDotExpr(Symbol symbol, FunctionCall ast,
                                           String name, List<Type> paramTypes) {
         Class theClass = (Class) symbol;
+        Function function = theClass.findStaticMethod(name, paramTypes);
+        if (function != null) {
+            at.typeOfNode.put(ast, function.returnType());
+            at.symbolOfNode.put(ast, function);
+            return true;
+        }
         theClass = theClass.getClass(name);
         at.typeOfNode.put(ast, theClass);
         Function constructor = theClass.findConstructor(paramTypes);
@@ -466,8 +519,8 @@ public class RefResolver extends BaseASTListener {
         return false;
     }
 
-    private boolean findDotFunctionByScope(Scope scope, FunctionCall ast,
-                                           String name, List<Type> paramTypes) {
+    private boolean findFunctionByScope(Scope scope, FunctionCall ast,
+                                        String name, List<Type> paramTypes) {
         boolean found = false;
         Function function = at.lookupFunction(scope, name, paramTypes);
         if (function != null) {

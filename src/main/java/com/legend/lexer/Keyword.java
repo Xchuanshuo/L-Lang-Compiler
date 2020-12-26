@@ -35,7 +35,7 @@ public class Keyword {
 //            "short", "整数", "long", "字符串", "f循环", "当", "如果", "否则",
 //            "switch", "case", "返回", "is", "继承",
 //            "final", "finally", "implements", "import", "private",
-//            "protected", "public", "无返回值", "static", "父类", "当前",
+//            "protected", "public", "无返回值", "静态", "父类", "当前",
 //            "throw", "throws", "try", "catch", "函数"
 //    };
 

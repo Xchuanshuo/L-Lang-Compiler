@@ -20,9 +20,4 @@ public class BlockScope extends Scope {
         this.enclosingScope = enclosingScope;
         this.astNode = ast;
     }
-
-    @Override
-    public String toString() {
-        return "Block " + name;
-    }
 }

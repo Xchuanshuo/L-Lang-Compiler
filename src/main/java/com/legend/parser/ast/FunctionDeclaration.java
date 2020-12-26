@@ -1,6 +1,7 @@
 package com.legend.parser.ast;
 
 import com.legend.exception.ParseException;
+import com.legend.lexer.Keyword;
 import com.legend.lexer.TokenType;
 import com.legend.parser.common.PeekTokenIterator;
 
@@ -19,6 +20,9 @@ public class FunctionDeclaration extends ASTNode {
 
     public static ASTNode parse(PeekTokenIterator it) throws ParseException {
         FunctionDeclaration func = new FunctionDeclaration();
+        if (it.topIsEqual(Keyword.Key.STATIC)) {
+            func.addChild(new TerminalNode(it.nextMatch(Keyword.Key.STATIC)));
+        }
         TypeTypeOrVoid type = (TypeTypeOrVoid) TypeTypeOrVoid.parse(it);
         if (!it.topIsEqual("(")) { // 普通函数
             func.addChild(type);
@@ -41,6 +45,10 @@ public class FunctionDeclaration extends ASTNode {
             func.addChild(block);
         }
         return func;
+    }
+
+    public TerminalNode STATIC() {
+        return getTerminalNode(Keyword.getValueByKey(Keyword.Key.STATIC));
     }
 
     public TypeTypeOrVoid typeTypeOrVoid() {

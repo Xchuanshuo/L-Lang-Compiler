@@ -31,7 +31,7 @@ memberDeclaration
     ;
 
 functionDeclaration
-    : typeTypeOrVoid? IDENTIFIER formalParameters
+    : (STATIC)? typeTypeOrVoid? IDENTIFIER formalParameters
       (THROWS qualifiedNameList)?
       functionBody
     ;
@@ -87,7 +87,7 @@ constructorDeclaration
     ;
 
 variableDeclarators
-    : typeType variableDeclarator (',' variableDeclarator)*
+    : (STATIC)? typeType variableDeclarator (',' variableDeclarator)*
     ;
 
 variableDeclarator

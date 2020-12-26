@@ -4,6 +4,7 @@ import com.legend.parser.ast.ASTNode;
 import com.legend.semantic.Variable.Super;
 import com.legend.semantic.Variable.This;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -16,6 +17,8 @@ public class Class extends Scope implements Type {
     private Class parentClass = null;
     private This thisRef = null;
     private Super superRef = null;
+    // 静态符号表 存储类的静态成员 以及 静态方法
+    private List<Symbol> statiSymbolTable = new ArrayList<>();
 
     private DefaultConstructor defaultConstructor;
 
@@ -48,7 +51,7 @@ public class Class extends Scope implements Type {
 
     @Override
     public String toString() {
-        return "Class " + name;
+        return enclosingScope + "_" + name;
     }
 
     @Override
@@ -74,6 +77,42 @@ public class Class extends Scope implements Type {
             rtn = parentClass.getClass(name);
         }
         return rtn;
+    }
+
+    public void addStatic(Symbol symbol) {
+        statiSymbolTable.add(symbol);
+    }
+
+    public Variable findStaticVariable(String name) {
+        Variable variable = null;
+        for (Symbol symbol : statiSymbolTable) {
+            if (symbol instanceof Variable && symbol.isStatic()
+                    && symbol.name.equals(name)) {
+                variable = (Variable) symbol;
+                break;
+            }
+        }
+        if (variable == null && getParentClass() != null) {
+            variable = getParentClass().findStaticVariable(name);
+        }
+        return variable;
+    }
+
+
+    public Function findStaticMethod(String name, List<Type> paramTypes) {
+        Function function = null;
+        for (Symbol symbol : statiSymbolTable) {
+            if (symbol instanceof Function && symbol.isStatic()
+                    && symbol.name.equals(name)
+                    && ((Function) symbol).matchParameterTypes(paramTypes)) {
+                function = (Function) symbol;
+                break;
+            }
+        }
+        if (function == null && getParentClass() != null) {
+            function = getParentClass().findStaticMethod(name, paramTypes);
+        }
+        return function;
     }
 
     // 查找构造函数
@@ -140,6 +179,4 @@ public class Class extends Scope implements Type {
         }
         return defaultConstructor;
     }
-
-
 }

@@ -1,6 +1,7 @@
 package com.legend.parser.ast;
 
 import com.legend.exception.ParseException;
+import com.legend.lexer.Keyword;
 import com.legend.parser.common.PeekTokenIterator;
 
 import java.util.List;
@@ -18,6 +19,9 @@ public class VariableDeclarators extends ASTNode {
 
     public static ASTNode parse(PeekTokenIterator it) throws ParseException {
         VariableDeclarators declarators = new VariableDeclarators();
+        if (it.topIsEqual(Keyword.Key.STATIC)) {
+            declarators.addChild(new TerminalNode(it.nextMatch(Keyword.Key.STATIC)));
+        }
         ASTNode typeNode = TypeType.parse(it);
         declarators.addChild(typeNode);
         ASTNode declarator = VariableDeclarator.parse(it);
@@ -28,6 +32,10 @@ public class VariableDeclarators extends ASTNode {
             declarators.addChild(child);
         }
         return declarators;
+    }
+
+    public TerminalNode STATIC() {
+        return getTerminalNode(Keyword.getValueByKey(Keyword.Key.STATIC));
     }
 
     public TypeType typeType() {

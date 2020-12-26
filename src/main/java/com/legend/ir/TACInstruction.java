@@ -125,6 +125,28 @@ public class TACInstruction {
                 return String.format("%s = STR_LEN(%s)", result, arg1);
             case NEW_ARRAY:
                 return String.format("%s = NEW_ARRAY %s %s", result, arg1, arg2);
+            case ARRAY_LEN:
+                return String.format("%s = ARRAY_LEN %s", result, arg1);
+            case NEW_INSTANCE:
+                return String.format("%s = NEW_INSTANCE %s", result, arg1);
+            case INVOKE_SPECIAL:
+                return String.format("%s = %s INVOKE_SPECIAL %s", result, arg1, arg2);
+            case INVOKE_VIRTUAL:
+                return String.format("%s = %s INVOKE_VIRTUAL %s", result, arg1, arg2);
+            case INVOKE_STATIC:
+                if (arg2 != null) {
+                    return String.format("%s = %s INVOKE_STATIC %s", result, arg1, arg2);
+                } else {
+                    return String.format("%s = INVOKE_STATIC %s", result, arg1);
+                }
+            case GET_FIELD:
+                return String.format("%s = %s GET_FIELD %s", result, arg1, arg2);
+            case GET_STATIC_FIELD:
+                if (arg2 != null) {
+                    return String.format("%s = %s GET_STATIC_FIELD %s", result, arg1, arg2);
+                } else {
+                    return String.format("%s = GET_STATIC_FIELD %s", result, arg1);
+                }
         }
         throw new InterpreterException("Unknown opcode type:" + type);
     }

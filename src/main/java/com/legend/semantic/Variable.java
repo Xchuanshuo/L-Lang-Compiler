@@ -1,6 +1,7 @@
 package com.legend.semantic;
 
 import com.legend.parser.ast.ASTNode;
+import com.legend.parser.ast.ArrayCall;
 
 /**
  * @author Legend
@@ -18,6 +19,10 @@ public class Variable extends Symbol {
         this.name = name;
         this.enclosingScope = enclosingScope;
         this.astNode = astNode;
+    }
+
+    public boolean isArrayType() {
+        return type instanceof ArrayType;
     }
 
     public boolean isClassMember() {

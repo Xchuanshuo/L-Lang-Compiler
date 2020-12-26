@@ -6,6 +6,7 @@ import com.legend.parser.Program;
 import com.legend.parser.ast.*;
 import com.legend.parser.common.BaseASTVisitor;
 import com.legend.semantic.*;
+import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 
 import java.util.*;
@@ -81,20 +82,28 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             Object rtn = visitVariableInitializer(ast.variableInitializer());
             Symbol s = at.symbolOfNode.get(ast.identifier());
             if (s instanceof Variable) {
-                if (rtn instanceof Constant) {
-                    // 常量分配新的名字
-                    Variable variable = s.getEnclosingScope()
-                            .createTempVariable(at.typeOfNode.get(s.getAstNode()));
-                    if (!variableMap.containsKey(s)) {
-                        variableMap.put((Variable) s, variable);
-                    }
-                    s = variableMap.get(s);
-                    TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
-                    program.add(instruction);
-                } else if (rtn instanceof Variable){
-                    // 变量沿用表达式的名字
-                    variableMap.put((Variable) s, (Variable) rtn);
+                Variable variable = s.getEnclosingScope()
+                        .createTempVariable(at.typeOfNode.get(s.getAstNode()));
+                if (!variableMap.containsKey(s)) {
+                    variableMap.put((Variable) s, variable);
                 }
+                s = variableMap.get(s);
+                TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
+                program.add(instruction);
+//                if (rtn instanceof Constant) {
+//                    // 常量分配新的名字
+//                    Variable variable = s.getEnclosingScope()
+//                            .createTempVariable(at.typeOfNode.get(s.getAstNode()));
+//                    if (!variableMap.containsKey(s)) {
+//                        variableMap.put((Variable) s, variable);
+//                    }
+//                    s = variableMap.get(s);
+//                    TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
+//                    program.add(instruction);
+//                } else if (rtn instanceof Variable){
+//                    // 变量沿用表达式的名字
+//                    variableMap.put((Variable) s, (Variable) rtn);
+//                }
             }
         }
         return super.visitVariableDeclarator(ast);
@@ -117,6 +126,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         TACInstruction startLabel = new TACInstruction(TACType.LABEL, null,
                 "function " + name, null, null);
         program.add(startLabel);
+        if (function.getEnclosingScope() instanceof Class
+                && !function.isStatic()) {
+            // 对象实例方法的第一个参数为this引用
+            function.getVariables().add(0, ((Class)
+                    function.getEnclosingScope()).getThis());
+        }
         for (Variable variable : function.getVariables()) {
             Variable tmp = function.createTempVariable(variable.getType());
             variableMap.put(variable, tmp);
@@ -126,14 +141,15 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
             program.add(paramTAC);
         }
-
-        visitBlock(ast.functionBody());
-
-        // 函数声明结尾加上一条默认返回指令
-        TACInstruction last = program.lastInstruction();
-        if (last != null && last.getType() != TACType.RETURN) {
-            program.add(new TACInstruction(TACType.RETURN));
+        if (ast.functionBody() != null) {
+            visitBlock(ast.functionBody());
+            // 函数声明结尾加上一条默认返回指令
+            TACInstruction last = program.lastInstruction();
+            if (last != null && last.getType() != TACType.RETURN) {
+                program.add(new TACInstruction(TACType.RETURN));
+            }
         }
+
         return super.visitFunctionDeclaration(ast);
     }
 
@@ -144,7 +160,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         if (list != null) size = list.size();
         Type type = at.typeOfNode.get(ast);
         Variable result = at.enclosingScopeOfNode(ast).createTempVariable(type);
-        TACInstruction createArrayTAC = genCreateArray(result, type, size);
+        TACInstruction createArrayTAC = genNewArray(result, type, size);
         program.add(createArrayTAC);
         if (list != null) {
             for (int i = 0;i < list.size();i++) {
@@ -171,14 +187,13 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             symbol = visitArrayCall((ArrayCall) ast);
         } else if (ast instanceof TerminalNode) {
             Symbol s = at.symbolOfNode.get(ast);
+            if (s instanceof Variable.This) {
+                Function function = at.enclosingFunctionOfNode(ast);
+                variableMap.put((Variable) s, variableMap.get(function.getVariables().get(0)));
+            }
             if (s instanceof Variable) { // 普通变量分配新名字
-                if (!variableMap.containsKey(s)) {
-                    Variable variable = s.getEnclosingScope()
-                            .createTempVariable(at.typeOfNode.get(s.getAstNode()));
-                    variableMap.put((Variable) s, variable);
-                }
-                symbol = variableMap.get(s);
-            } else if (s instanceof Function) {
+                symbol = processVariable(ast, s);
+            } else if (s instanceof Function || s instanceof Class) {
                 symbol = s;
             }
         } else if (ast.getAstNodeType() == ASTNodeType.BINARY_EXP) {
@@ -187,10 +202,35 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return symbol;
     }
 
+    private Symbol processVariable(Expr ast, Symbol s) {
+        Symbol symbol = null;
+        if (!(s instanceof Variable.This) && ((Variable) s).isClassMember()) { // 类成员
+            symbol = s.getEnclosingScope().createTempVariable(at.typeOfNode.get(s.getAstNode()));
+            if (s.isStatic()) { // 静态成员(属于类)
+                Class theClass = (Class) s.getEnclosingScope();
+                TACInstruction staticFieldTAC = genGetStaticField((Variable) symbol, theClass, s);
+                program.add(staticFieldTAC);
+            } else { // 普通成员(属于对象)
+                Function function = at.enclosingFunctionOfNode(ast);
+                Variable thisV = variableMap.get(function.getVariables().get(0));
+                TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
+                program.add(fieldTAC);
+            }
+        } else {
+            if (!variableMap.containsKey(s)) {
+                Variable variable = s.getEnclosingScope()
+                        .createTempVariable(at.typeOfNode.get(s.getAstNode()));
+                variableMap.put((Variable) s, variable);
+            }
+            symbol = variableMap.get(s);
+        }
+        return symbol;
+    }
+
     private Symbol processBinaryExp(Expr ast) {
-//        if (ast.isDotExpr()) {
-//            return processDotExpr(ast);
-//        }
+        if (ast.isDotExpr()) {
+            return translateDotExp(ast);
+        }
         Object left = visitExpr(ast.expr(0));
         Object right = visitExpr(ast.expr(1));
         Scope scope = at.enclosingScopeOfNode(ast);
@@ -231,9 +271,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 }
                 break;
             case ADD_ASSIGN:
-
                 instruction = processOpAssign(ast, left, right, "+");
-
                 break;
             case SUB_ASSIGN:
                 instruction = processOpAssign(ast, left, right, "-");
@@ -258,17 +296,118 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return result;
     }
 
+    private Symbol translateDotExp(Expr ast) {
+        Symbol result = null;
+        Scope scope = at.enclosingScopeOfNode(ast);
+        Object left = visitExpr(ast.leftChild());
+        if (left instanceof Variable && ((Variable) left).isArrayType()
+                && ast.rightChild().getToken().getText().equals("length")) {
+            result = scope.createTempVariable(PrimitiveType.Integer);
+            TACInstruction lengthTAC = genGetArrayLen((Variable) result, left);
+            program.add(lengthTAC);
+        } else if (ast.rightChild() instanceof ArrayCall) {
+            result = visitArrayCall((ArrayCall) ast.rightChild());
+        } else if (ast.functionCall() != null) {
+            FunctionCall functionCall = null;
+            // 可能存在functionCall().functionCall()的情况 优先取右孩子
+            if (ast.rightChild() instanceof FunctionCall) {
+                functionCall = (FunctionCall) ast.rightChild();
+            } else {
+                functionCall = (FunctionCall) ast.leftChild();
+            }
+            List<Symbol> args = getArgsSymbol(functionCall);
+            Function function = (Function) at.symbolOfNode.get(functionCall);
+            if (left instanceof Variable) { // 对象实例方法
+                result = translateVirtualMethod(scope, (Variable) left, function, args);
+            } else if (left instanceof Class){ // 类(静态)方法
+                result = translateStaticFunction(scope, (Class) left, function, args);
+            }
+        } else {
+            Variable variable = (Variable) at.symbolOfNode.get(ast);
+            result = scope.createTempVariable(at.typeOfNode.get(ast));
+            if (variable.isStatic()) {
+                TACInstruction staticFieldTAC = genGetStaticField((Variable) result, left, variable);
+                program.add(staticFieldTAC);
+            } else {
+                if (!(variable instanceof Variable.This)
+                        && !(variable instanceof Variable.Super)) {
+                    TACInstruction fieldTAC = genGetField((Variable) result, left, variable);
+                    program.add(fieldTAC);
+                }
+            }
+        }
+        return result;
+    }
+
     @Override
     public Symbol visitFunctionCall(FunctionCall ast) {
         String funcName = ast.identifier().getText();
-        Symbol symbol = at.symbolOfNode.get(ast);
-        if (symbol instanceof DefaultConstructor) {
-            // todo 构造函数
-        } else if (BuiltInFunction.isBuiltInFunc(funcName)) {
+        Scope scope = at.enclosingScopeOfNode(ast);
+        Function function = (Function) at.symbolOfNode.get(ast);
+        if (BuiltInFunction.isBuiltInFunc(funcName)) {
             // 内置函数
             return translateBuiltInFunction(ast);
         }
+        System.out.println(scope + "---------------------------------");
+        List<Symbol> args = getArgsSymbol(ast);
+        if (function.isConstructor()) { // 类构造方法
+            return translateConstructor(scope, function, args);
+        } else if (!function.isStatic() && function.isMethod()) {
+            // this隐式调用 位于对象的实例方法内部可以省略this关键字
+            Function caller = at.enclosingFunctionOfNode(ast);
+            if (caller == null) return null;
+            Variable thisV = variableMap.get(caller.getVariables().get(0));
+            return translateVirtualMethod(scope, thisV, function, args);
+        } else if (!(ast.getParent() instanceof Expr)
+                || !((Expr) ast.getParent()).isDotExpr()
+                || ast != ((Expr) ast.getParent()).rightChild()){ // 全局方法
+            return translateStaticFunction(scope, function, args);
+        }
         return null;
+    }
+
+    private Symbol translateConstructor(Scope scope, Function function, List<Symbol> args) {
+        Class theClass = (Class) function.getEnclosingScope();
+        Variable result = scope.createTempVariable(theClass);
+        TACInstruction newInstanceTAC = genNewInstance(result, theClass);
+        program.add(newInstanceTAC);
+        if (!(function instanceof DefaultConstructor)) {
+            args.add(0, result);
+            for (Symbol symbol : args) {
+                TACInstruction argTAC = genArg(symbol);
+                program.add(argTAC);
+            }
+            TACInstruction invokeSpecialTAC = genInvokeSpecial(result, result, function);
+            program.add(invokeSpecialTAC);
+        }
+        return result;
+    }
+
+    private Symbol translateStaticFunction(Scope scope, Function function, List<Symbol> args) {
+        return translateStaticFunction(scope, null, function, args);
+    }
+
+    private Symbol translateStaticFunction(Scope scope, Class theClass, Function function, List<Symbol> args) {
+        for (Symbol symbol : args) {
+            TACInstruction argTAC = genArg(symbol);
+            program.add(argTAC);
+        }
+        Variable result = scope.createTempVariable(function.returnType());
+        TACInstruction invokeStaticTAC = genInvokeStatic(result, theClass, function);
+        program.add(invokeStaticTAC);
+        return result;
+    }
+
+    private Symbol translateVirtualMethod(Scope scope, Variable classObj, Function function, List<Symbol> args) {
+        args.add(0, classObj);
+        for (Symbol symbol : args) {
+            TACInstruction argTAC = genArg(symbol);
+            program.add(argTAC);
+        }
+        Variable result = scope.createTempVariable(function.returnType());
+        TACInstruction invokeVirtualTAC = genInvokeVirtual(result, classObj, function);
+        program.add(invokeVirtualTAC);
+        return result;
     }
 
     @Override
@@ -289,9 +428,25 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     }
 
     private Symbol translateArrayCall(Scope scope, ArrayCall ast) {
-        Variable array = (Variable) at.symbolOfNode.get(ast.identifier());
-        array = variableMap.get(array);
-        Type curType = array.getType();
+        Variable arrayV = (Variable) at.symbolOfNode.get(ast.identifier());
+        if (arrayV.isClassMember()) {
+            Variable result = scope.createTempVariable(arrayV.getType());
+            if (arrayV.isStatic()) {
+                Class theClass = (Class) arrayV.getEnclosingScope();
+                TACInstruction staticFieldTAC = genGetStaticField(result, theClass, arrayV);
+                program.add(staticFieldTAC);
+            } else {
+                // this隐式调用 位于对象的实例方法内部可以省略this关键字
+                Function caller = at.enclosingFunctionOfNode(ast);
+                if (caller == null) return null;
+                Variable thisV = variableMap.get(caller.getVariables().get(0));
+                TACInstruction fieldTAC = genGetField(result, thisV, arrayV);
+                program.add(fieldTAC);
+            }
+            variableMap.put(arrayV, result);
+        }
+        arrayV = variableMap.get(arrayV);
+        Type curType = arrayV.getType();
         int len = ast.exprList().size();
         Variable result = null;
         for (int i = 0;i < len;i++) {
@@ -301,17 +456,17 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             Symbol idx = visitExpr(ast.exprList().get(i));
             if (i == len - 1) {
                 ASTNode parent = ast.getParent();
-                // 数组调用是表达式的左孩子 表示是数组赋值
+                // 数组调用赋值表达式的左孩子 表示是数组赋值
                 if (parent instanceof Expr && parent.firstChild() == ast &&
                         parent.getToken().isAssignOperator()) {
                     tmpData.offer(idx);
-                    return array;
+                    return arrayV;
                 }
             }
             result = scope.createTempVariable(curType);
             TACInstruction tac = new TACInstruction(TACType.ASSIGN,
-                    result, array, idx, "=");
-            array = result;
+                    result, arrayV, idx, "=");
+            arrayV = result;
             program.add(tac);
         }
         return result;
@@ -325,6 +480,10 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             program.add(tac);
             return result;
         } else {
+            Variable array = scope.createTempVariable(type);
+            TACInstruction tac = new TACInstruction(TACType.NEW_ARRAY, array, type,
+                    dimensionList.get(d), null);
+            program.add(tac);
             Constant initVal = new Constant(PrimitiveType.Integer, 0);
             Variable v1 = scope.createTempVariable(PrimitiveType.Integer);
             TACInstruction v1AssignTAC = new TACInstruction(TACType.ASSIGN, v1, initVal, null, null);
@@ -338,7 +497,6 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
             Symbol res = translateNewEmptyArray(scope, dimensionList, d + 1, ((ArrayType)type).baseType());
 
-            Variable array = scope.createTempVariable(type);
             TACInstruction arrAssignTAC = new TACInstruction(TACType.ASSIGN, array, v1, res, "=");
             arrAssignTAC.setArrayAssign(true);
             TACInstruction incTAC = new TACInstruction(TACType.ASSIGN, v1, v1,
@@ -350,6 +508,16 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             return array;
         }
     }
+
+    // 获取函数的参数值
+    private List<Symbol> getArgsSymbol(FunctionCall functionCall) {
+        List<Symbol> symbols = new ArrayList<>();
+        for (Expr expr : functionCall.exprList().exprList()) {
+            symbols.add(visitExpr(expr));
+        }
+        return symbols;
+    }
+
 
     @Override
     public Constant visitLiteral(Literal ast) {
@@ -399,7 +567,9 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     @Override
     public Object visitBlock(Block ast) {
-        visitBlockStatements(ast.blockStatements());
+        if (ast.blockStatements() != null) {
+            visitBlockStatements(ast.blockStatements());
+        }
         return super.visitBlock(ast);
     }
 
@@ -541,8 +711,47 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return new TACInstruction(TACType.IF_T, null, condition, label, null);
     }
 
-    private TACInstruction genCreateArray(Variable result, Type type, int n) {
+    private TACInstruction genNewArray(Variable result, Type type, int n) {
         return new TACInstruction(TACType.NEW_ARRAY, result, type, n, null);
+    }
+
+    private TACInstruction genGetArrayLen(Variable result, Object arg1) {
+        return new TACInstruction(TACType.ARRAY_LEN, result, arg1, null, null);
+    }
+
+    private TACInstruction genNewInstance(Variable result, Class theClass) {
+        return new TACInstruction(TACType.NEW_INSTANCE, result, theClass, null, null);
+    }
+
+    private TACInstruction genArg(Symbol arg) {
+        return new TACInstruction(TACType.ARG, null, arg, null, null);
+    }
+
+    // 调用构造函数
+    private TACInstruction genInvokeSpecial(Variable result, Variable classObj, Function function) {
+        return new TACInstruction(TACType.INVOKE_SPECIAL, result, classObj, function, null);
+    }
+
+    // 调用普通的对象方法
+    private TACInstruction genInvokeVirtual(Variable result, Variable classObj, Function function) {
+        return new TACInstruction(TACType.INVOKE_VIRTUAL, result, classObj, function, null);
+    }
+
+    // 调用静态方法或全局作用域方法
+    private TACInstruction genInvokeStatic(Variable result, Class theClass, Function function) {
+        return new TACInstruction(TACType.INVOKE_STATIC, result, theClass, function, null);
+    }
+
+    private TACInstruction genInvokeStatic(Variable result, Function function) {
+        return genInvokeStatic(result, null, function);
+    }
+
+    private TACInstruction genGetField(Variable result, Object arg1, Object arg2) {
+        return new TACInstruction(TACType.GET_FIELD, result, arg1, arg2, null);
+    }
+
+    private TACInstruction genGetStaticField(Variable result, Object arg1, Object arg2) {
+        return new TACInstruction(TACType.GET_STATIC_FIELD, result, arg1, arg2, null);
     }
 
     private TACInstruction genPrint() {
@@ -584,7 +793,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         } else if (BuiltInFunction.getValueByKey(STR_LEN).equals(name)){
             return translateStrLen(ast);
         } else if (BuiltInFunction.getValueByKey(STR_AT).equals(name)){
-//            List<Object> list = getParamValues(ast);
+//            List<Object> list = getArgsSymbol(ast);
 //            if (list.size() < 2) return null;
 //            Object idx = list.get(1);
 //            if (idx instanceof Long) {

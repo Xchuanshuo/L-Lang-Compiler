@@ -79,7 +79,7 @@ public class Expr extends ASTNode {
         while (node1 != null && node1.astNodeType == ASTNodeType.BINARY_EXP
                 && node1.getToken().isAssignOperator()) {
             ASTNode leftChild = ((Expr) node1).leftChild();
-            boolean condition = leftChild instanceof Expr &&
+            boolean condition = leftChild != null &&
                     leftChild.astNodeType == ASTNodeType.BINARY_EXP
                     && leftChild.getToken().isAssignOperator();
             if (!condition) break;
@@ -102,7 +102,9 @@ public class Expr extends ASTNode {
                 it.nextMatch(TokenType.KEYWORD);
                 if (token.isThisOrSuper() && !it.topIsEqual("(")
                         && !it.topIsEqual(".")) {
-                    throw new ParseException(token);
+                    if (!Keyword.getValueByKey(THIS).equals(token.getText())) {
+                        throw new ParseException(token);
+                    }
                 }
             } else {
                 it.nextMatch(TokenType.IDENTIFIER);
@@ -144,8 +146,8 @@ public class Expr extends ASTNode {
         return getASTNode(Expr.class, idx);
     }
 
-    public ASTNode leftChild() {
-        return getChild(0);
+    public Expr leftChild() {
+        return expr(0);
     }
 
     public void setLeftChild(ASTNode astNode) {
@@ -153,8 +155,8 @@ public class Expr extends ASTNode {
         astNode.setParent(this);
     }
 
-    public ASTNode rightChild() {
-        return getChild(1);
+    public Expr rightChild() {
+        return expr(1);
     }
 
     public void setRightChild(ASTNode astNode) {

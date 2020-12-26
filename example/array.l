@@ -65,9 +65,10 @@ class QuickSort extends Sort {
 }
 
 class MergeSort extends Sort {
-    int[] aux;
+    int[] aux = int[10];
     void sort(int[] a) {
-        aux = int[a.length];
+        aux = int[a.length]
+        aux[0] = 1
         mergeSort(a, 0, a.length - 1);
     }
 
@@ -148,29 +149,27 @@ println("排序后:");
 printArr();
 
 
-class A {
-    class B {
-        void test() {
-            println("B--Test")
-        }
-
-        class C {
-            void t() {
-                println("test--Cc")
-            }
-        }
-    }
-}
-
-A.B.C b = A.B.C()
-b.t()
+//class A {
+//    class B {
+//        void test() {
+//            println("B--Test")
+//        }
+//
+//        class C {
+//            void t() {
+//                println("test--Cc")
+//            }
+//        }
+//    }
+//}
+//
+//A.B.C b = A.B.C()
+//b.t()
 
 //b.test()
-
 //int[] b = {};
 //int[][] a = {{1,2,3,4}, {5,6,7,8}}
 //a[5>>6][1+2] = d
-
 //int[10] a = {{1, 2, 3, 4}, 1,2,3,4, 5 * 6 +4, b}
 //int[][][] a = a.j[10][10]
 //

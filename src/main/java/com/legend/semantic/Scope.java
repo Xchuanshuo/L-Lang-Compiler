@@ -111,6 +111,6 @@ public class Scope extends Symbol {
 
     @Override
     public String toString() {
-        return "Scope: " + name;
+        return enclosingScope + "_" + name;
     }
 }

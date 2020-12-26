@@ -15,6 +15,8 @@ public class Symbol {
     protected Scope enclosingScope;
     // 符号可见性(private、public)
     private int visibility;
+    // 符号是否为静态
+    private boolean isStatic = false;
     // 符号关联的ast节点
     protected ASTNode astNode;
 
@@ -32,6 +34,14 @@ public class Symbol {
 
     public ASTNode getAstNode() {
         return astNode;
+    }
+
+    public void setStatic(boolean aStatic) {
+        isStatic = aStatic;
+    }
+
+    public boolean isStatic() {
+        return isStatic;
     }
 
     public void setEnclosingScope(Scope enclosingScope) {

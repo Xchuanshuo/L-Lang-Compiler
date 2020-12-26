@@ -63,3 +63,7 @@ int[][][] newArr = int[1][2][3]
 int[][] newArr1 = newArr[0]
 int c = 99
 a = c = newArr1[0][1] = 1 + 2*3
+
+// 测试函数调用
+int tr = testFunc(c, '11')
+tr = tr + bar(10)

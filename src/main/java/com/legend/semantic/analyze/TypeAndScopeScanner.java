@@ -109,15 +109,24 @@ public class TypeAndScopeScanner extends BaseASTListener {
         String name = ast.funcName().getText();
         // 初次扫描函数信息不完整 后续扫描进行补充
         Function function = new Function(name, currentScope(), ast);
+        function.setStatic(ast.STATIC() != null);
         at.types.add(function);
         at.symbolOfNode.put(ast, function);
-        Objects.requireNonNull(currentScope()).addSymbol(function);
+        if (currentScope() instanceof Class && function.isStatic()) {
+            ((Class) currentScope()).addStatic(function);
+        } else {
+            Objects.requireNonNull(currentScope()).addSymbol(function);
+        }
         pushScope(function, ast);
     }
 
     @Override
     public void exitFunctionDeclaration(FunctionDeclaration ast) {
         popScope();
+    }
+
+    public static void test() {
+
     }
 
     @Override

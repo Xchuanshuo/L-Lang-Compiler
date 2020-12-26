@@ -14,8 +14,6 @@ import com.legend.semantic.AnnotatedTree;
 import com.legend.semantic.analyze.*;
 
 import java.io.IOException;
-import java.util.Arrays;
-import java.util.List;
 
 /**
  * @author Legend
@@ -26,7 +24,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/ir_test.l";
+                "L-Lang-Compiler/example/ir_test2.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -34,7 +32,7 @@ public class Compiler {
         Program program = Parser.fromFile(path);
         AnnotatedTree at = new AnnotatedTree();
         at.setAstRoot(program);
-        program.dumpAST();
+//        program.dumpAST();
 
         ASTIterator astIterator = new ASTIterator();
         // 语义分析, 采用多阶段扫描
