@@ -1,11 +1,10 @@
 package com.legend.ir;
 
 import com.legend.exception.InterpreterException;
-import com.legend.exception.ParseException;
-import com.legend.semantic.Function;
-import com.legend.semantic.Symbol;
+import com.legend.gen.GlobalConstantPool;
+import com.legend.gen.MethodArea;
+import com.legend.semantic.*;
 
-import java.awt.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -19,7 +18,7 @@ import java.util.Map;
 public class TACProgram {
 
     private List<TACInstruction> instructionList = new ArrayList<>();
-    private Map<TACInstruction, VMFunction> labelTofunctionMap = new HashMap<>();
+    private Map<TACInstruction, Function> labelToFunctionMap = new HashMap<>();
     private int labelCounter = 0;
 
     public TACProgram add(TACInstruction instruction) {
@@ -57,16 +56,16 @@ public class TACProgram {
             throw new InterpreterException("Expected a Label, but " + label.getType());
         }
         // 函数入口地址默认是当前已经转换的指令条数
-        labelTofunctionMap.put(label, new VMFunction(function, instructionList.size()));
+        labelToFunctionMap.put(label, function);
     }
 
-    public VMFunction getVMFunction(TACInstruction label) {
-        return labelTofunctionMap.get(label);
+    public Function getFunction(TACInstruction label) {
+        return labelToFunctionMap.get(label);
     }
 
     public TACInstruction findLabelByFunction(Function target) {
-        for (Map.Entry<TACInstruction, VMFunction> entry : labelTofunctionMap.entrySet()) {
-            if (entry.getValue().getFunction() == target) {
+        for (Map.Entry<TACInstruction, Function> entry : labelToFunctionMap.entrySet()) {
+            if (entry.getValue() == target) {
                 return entry.getKey();
             }
         }
@@ -78,6 +77,55 @@ public class TACProgram {
         for (TACInstruction instruction : instructionList) {
 //            System.out.println(instruction);
             System.out.println(String.format("%8s", i++ + ":    ") + instruction);
+        }
+    }
+
+    public void dumpConstantPool() {
+        GlobalConstantPool constantPool = MethodArea.getInstance()
+                .getConstantPool();
+        System.out.println(constantPool.toString());
+    }
+
+    public void fillConstantPool(Scope scope) {
+        for (Symbol symbol : scope.getSymbols()) {
+            if (symbol instanceof Constant) {
+                MethodArea.getInstance().addConstant((Constant) symbol);
+            } else if (symbol instanceof Scope) {
+                fillConstantPool((Scope) symbol);
+            }
+        }
+    }
+
+    public void fillConstantPool() {
+        MethodArea area = MethodArea.getInstance();
+        for (TACInstruction instruction : instructionList) {
+            if (instruction.getArg1() instanceof Constant) {
+                area.addConstant((Constant) instruction.getArg1());
+            }
+            if (instruction.getArg2() instanceof Constant) {
+                area.addConstant((Constant) instruction.getArg2());
+            }
+            if (instruction.getArg1() instanceof Type) {
+                Constant constant = area.addType((Type) instruction.getArg1());
+                instruction.setArg1(constant);
+            }
+            if (instruction.getArg2() instanceof Type) {
+                Constant constant = area.addType((Type) instruction.getArg2());
+                instruction.setArg2(constant);
+            }
+//            if (instruction.getArg2() instanceof Function) {
+//                Function function = (Function) instruction.getArg2();
+//                TACInstruction label = findLabelByFunction(function);
+//                Constant constant = area.addFunction(function, 0);
+//                label.setArg1(constant.getValue());
+//                instruction.setArg2(label);
+//            }
+            if (instruction.getType() == TACType.GET_FIELD ||
+                    instruction.getType() == TACType.GET_STATIC_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+                area.addConstant(constant);
+                instruction.setArg2(constant);
+            }
         }
     }
 

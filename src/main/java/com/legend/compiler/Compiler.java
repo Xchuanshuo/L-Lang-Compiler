@@ -2,6 +2,8 @@ package com.legend.compiler;
 
 import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
+import com.legend.gen.OpCodeGenerator;
+import com.legend.gen.OpCodeProgram;
 import com.legend.interpreter.LInterpreter;
 import com.legend.ir.TACGenerator;
 import com.legend.ir.TACProgram;
@@ -24,7 +26,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/ir_test2.l";
+                "L-Lang-Compiler/example/array.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -67,7 +69,15 @@ public class Compiler {
         TACProgram tacProgram = new TACProgram();
         TACGenerator irGenerator = new TACGenerator(at, tacProgram);
         program.accept(irGenerator);
+        tacProgram.fillConstantPool();
 
-        tacProgram.dump();
+//        tacProgram.dump();
+        tacProgram.dumpConstantPool();
+
+        OpCodeGenerator codeGenerator = new OpCodeGenerator(tacProgram);
+        codeGenerator.generate();
+        OpCodeProgram opCodeProgram = codeGenerator.getProgram();
+
+        opCodeProgram.dumpWithComments();
     }
 }

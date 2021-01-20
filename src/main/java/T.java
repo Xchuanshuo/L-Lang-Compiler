@@ -40,10 +40,11 @@ public class T {
 //        int[][] a = new int[3][4];
 //        a[0][1] = 10;
 //        a[1][2] = 10;
-//        int i = System.in.read();
-//        int d = i + 10;
-//        int[][][] a = new int[d + 1][d][d];
-//        System.out.println(a[0])
+        int i = System.in.read();
+        int d = i + 10;
+        int[][][] a = new int[d + 1][d][d];
+        a[1][1][1] = 9;
+        System.out.println(a[0]);
         T t = new T();
         new Thread(() -> {
             try {

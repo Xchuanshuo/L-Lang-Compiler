@@ -16,7 +16,8 @@ public class Scope extends Symbol {
 
     // 当前作用域的符号表
     protected List<Symbol> symbols = new ArrayList<>();
-    private static int counter = 0;
+    protected List<Variable> localsVariables = new ArrayList<>();
+    private int counter = 0;
 
     // 添加一个新的符号到当前作用域所持有的符号表
     public void addSymbol(Symbol symbol) {
@@ -98,11 +99,21 @@ public class Scope extends Symbol {
     }
 
     public Variable createTempVariable(Type type) {
-        Token token = new Token(TokenType.IDENTIFIER, "v" + counter++);
+        Token token = new Token(TokenType.IDENTIFIER, "v" + counter);
         Variable variable = new Variable(token.getText(), this, null);
         variable.setType(type);
-        addSymbol(variable);
+        variable.setOffset(counter);
+        counter++;
+        localsVariables.add(variable);
         return variable;
+    }
+
+    public List<Variable> getLocalVariables() {
+        return localsVariables;
+    }
+
+    public int getLocalsSize() {
+        return localsVariables.size();
     }
 
     public List<Symbol> getSymbols() {

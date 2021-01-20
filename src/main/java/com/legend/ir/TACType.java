@@ -15,7 +15,7 @@ public enum TACType {
     ARG, // arg 1(实参)
     PARAM, // param 1(形参)
     RETURN, // return (expr)
-    ENTRY, // entry f (函数或方法声明)
+    ENTRY, // entry f (函数调用开始)
     EXIT, // exit (退出函数)
 
     // 内置函数

@@ -20,6 +20,8 @@ public class Symbol {
     // 符号关联的ast节点
     protected ASTNode astNode;
 
+    private int offset = 0;
+
     public String getName() {
         return name;
     }
@@ -46,5 +48,13 @@ public class Symbol {
 
     public void setEnclosingScope(Scope enclosingScope) {
         this.enclosingScope = enclosingScope;
+    }
+
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return offset;
     }
 }

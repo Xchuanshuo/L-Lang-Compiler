@@ -82,8 +82,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             Object rtn = visitVariableInitializer(ast.variableInitializer());
             Symbol s = at.symbolOfNode.get(ast.identifier());
             if (s instanceof Variable) {
-                Variable variable = s.getEnclosingScope()
-                        .createTempVariable(at.typeOfNode.get(s.getAstNode()));
+                Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
                 if (!variableMap.containsKey(s)) {
                     variableMap.put((Variable) s, variable);
                 }
@@ -126,6 +125,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         TACInstruction startLabel = new TACInstruction(TACType.LABEL, null,
                 "function " + name, null, null);
         program.add(startLabel);
+        program.addFunction(startLabel, function);
         if (function.getEnclosingScope() instanceof Class
                 && !function.isStatic()) {
             // 对象实例方法的第一个参数为this引用
@@ -149,7 +149,6 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 program.add(new TACInstruction(TACType.RETURN));
             }
         }
-
         return super.visitFunctionDeclaration(ast);
     }
 
@@ -159,7 +158,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         List<VariableInitializer> list = ast.variableInitializerList();
         if (list != null) size = list.size();
         Type type = at.typeOfNode.get(ast);
-        Variable result = at.enclosingScopeOfNode(ast).createTempVariable(type);
+        Variable result = getScope(ast).createTempVariable(type);
         TACInstruction createArrayTAC = genNewArray(result, type, size);
         program.add(createArrayTAC);
         if (list != null) {
@@ -198,6 +197,16 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
         } else if (ast.getAstNodeType() == ASTNodeType.BINARY_EXP) {
             symbol = processBinaryExp(ast);
+        } else if (ast.getAstNodeType() == ASTNodeType.UNARY_EXP) {
+            Object right = visitExpr(ast.expr(0));
+            switch (ast.getToken().getTokenType()) {
+                case BANG:
+                    symbol = getScope(ast).createTempVariable(PrimitiveType.Integer);
+                    TACInstruction tac = new TACInstruction(TACType.ASSIGN, (Variable) symbol,
+                            new Constant(PrimitiveType.Integer, 0), right, "^");
+                    program.add(tac);
+                    break;
+            }
         }
         return symbol;
     }
@@ -205,7 +214,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     private Symbol processVariable(Expr ast, Symbol s) {
         Symbol symbol = null;
         if (!(s instanceof Variable.This) && ((Variable) s).isClassMember()) { // 类成员
-            symbol = s.getEnclosingScope().createTempVariable(at.typeOfNode.get(s.getAstNode()));
+            symbol = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
             if (s.isStatic()) { // 静态成员(属于类)
                 Class theClass = (Class) s.getEnclosingScope();
                 TACInstruction staticFieldTAC = genGetStaticField((Variable) symbol, theClass, s);
@@ -218,8 +227,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
         } else {
             if (!variableMap.containsKey(s)) {
-                Variable variable = s.getEnclosingScope()
-                        .createTempVariable(at.typeOfNode.get(s.getAstNode()));
+                Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
                 variableMap.put((Variable) s, variable);
             }
             symbol = variableMap.get(s);
@@ -233,7 +241,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         }
         Object left = visitExpr(ast.expr(0));
         Object right = visitExpr(ast.expr(1));
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Type expectedType = at.typeOfNode.get(ast);
         TACInstruction instruction = null;
         Variable result = null;
@@ -342,7 +350,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     @Override
     public Symbol visitFunctionCall(FunctionCall ast) {
         String funcName = ast.identifier().getText();
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Function function = (Function) at.symbolOfNode.get(ast);
         if (BuiltInFunction.isBuiltInFunc(funcName)) {
             // 内置函数
@@ -373,7 +381,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         program.add(newInstanceTAC);
         if (!(function instanceof DefaultConstructor)) {
             args.add(0, result);
-            for (Symbol symbol : args) {
+            for (int i = args.size() - 1;i >= 0;i--) {
+                Symbol symbol = args.get(i);
                 TACInstruction argTAC = genArg(symbol);
                 program.add(argTAC);
             }
@@ -388,7 +397,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     }
 
     private Symbol translateStaticFunction(Scope scope, Class theClass, Function function, List<Symbol> args) {
-        for (Symbol symbol : args) {
+        for (int i = args.size() - 1;i >= 0;i--) {
+            Symbol symbol = args.get(i);
             TACInstruction argTAC = genArg(symbol);
             program.add(argTAC);
         }
@@ -400,7 +410,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private Symbol translateVirtualMethod(Scope scope, Variable classObj, Function function, List<Symbol> args) {
         args.add(0, classObj);
-        for (Symbol symbol : args) {
+        for (int i = args.size() - 1;i >= 0;i--) {
+            Symbol symbol = args.get(i);
             TACInstruction argTAC = genArg(symbol);
             program.add(argTAC);
         }
@@ -414,7 +425,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     public Symbol visitArrayCall(ArrayCall ast) {
         String name = ast.identifier().getText();
         Type type = at.lookupType(name);
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         if (type != null || ast.identifier().getToken().isBaseType()) { // 实例化一个数组
             Type curType = at.typeOfNode.get(ast);
             List<Symbol> symbolList = new ArrayList<>();
@@ -425,6 +436,17 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         } else { // 普通的数组调用
             return translateArrayCall(scope, ast);
         }
+    }
+
+    private Scope getScope(ASTNode ast) {
+        Scope scope = at.enclosingFunctionOfNode(ast);
+        if (scope == null) {
+            scope = at.enclosingClassOfNode(ast);
+            if (scope == null) {
+                scope = at.enclosingScopeOfNode(ast);
+            }
+        }
+        return scope;
     }
 
     private Symbol translateArrayCall(Scope scope, ArrayCall ast) {
@@ -677,7 +699,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private TACInstruction processOpAssign(Expr ast, Object left, Object right,
                                            String op) {
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Type expectedType = at.typeOfNode.get(ast);
         Object lastLeft = left;
         if (ast.expr(0) instanceof ArrayCall) {
@@ -712,7 +734,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     }
 
     private TACInstruction genNewArray(Variable result, Type type, int n) {
-        return new TACInstruction(TACType.NEW_ARRAY, result, type, n, null);
+        return new TACInstruction(TACType.NEW_ARRAY, result, type,
+                new Constant(PrimitiveType.Integer, n), null);
     }
 
     private TACInstruction genGetArrayLen(Variable result, Object arg1) {
@@ -721,6 +744,10 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private TACInstruction genNewInstance(Variable result, Class theClass) {
         return new TACInstruction(TACType.NEW_INSTANCE, result, theClass, null, null);
+    }
+
+    private void addEntry() { // 函数调用开始
+        program.add(new TACInstruction(TACType.ENTRY));
     }
 
     private TACInstruction genArg(Symbol arg) {
@@ -833,7 +860,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             type = PrimitiveType.String;
         }
         Symbol target = visitExprList(ast.exprList());
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Variable tmpVariable = scope.createTempVariable(type);
         TACInstruction cast = new TACInstruction(tacType,
                 tmpVariable, target, null, null);
@@ -843,7 +870,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private Symbol translateStrLen(FunctionCall ast) {
         Symbol target = visitExprList(ast.exprList());
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Variable tmpVariable = scope.createTempVariable(PrimitiveType.Integer);
         TACInstruction strLenTAC = new TACInstruction(TACType.STR_LEN,
                 tmpVariable, target, null, null);

@@ -18,7 +18,7 @@ public class Class extends Scope implements Type {
     private This thisRef = null;
     private Super superRef = null;
     // 静态符号表 存储类的静态成员 以及 静态方法
-    private List<Symbol> statiSymbolTable = new ArrayList<>();
+    private List<Symbol> staticSymbolTable = new ArrayList<>();
 
     private DefaultConstructor defaultConstructor;
 
@@ -80,12 +80,12 @@ public class Class extends Scope implements Type {
     }
 
     public void addStatic(Symbol symbol) {
-        statiSymbolTable.add(symbol);
+        staticSymbolTable.add(symbol);
     }
 
     public Variable findStaticVariable(String name) {
         Variable variable = null;
-        for (Symbol symbol : statiSymbolTable) {
+        for (Symbol symbol : staticSymbolTable) {
             if (symbol instanceof Variable && symbol.isStatic()
                     && symbol.name.equals(name)) {
                 variable = (Variable) symbol;
@@ -98,10 +98,9 @@ public class Class extends Scope implements Type {
         return variable;
     }
 
-
     public Function findStaticMethod(String name, List<Type> paramTypes) {
         Function function = null;
-        for (Symbol symbol : statiSymbolTable) {
+        for (Symbol symbol : staticSymbolTable) {
             if (symbol instanceof Function && symbol.isStatic()
                     && symbol.name.equals(name)
                     && ((Function) symbol).matchParameterTypes(paramTypes)) {

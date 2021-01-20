@@ -96,7 +96,7 @@ public class TACInstruction {
             case LABEL:
                 return String.format("%s:", arg1);
             case ENTRY:
-                return "FUNC_BEGIN";
+                return "Entry:";
             case RETURN:
                 return String.format("RETURN %s", arg1 == null ? "" : arg1);
             case ARG:

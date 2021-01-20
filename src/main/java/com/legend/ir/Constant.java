@@ -1,6 +1,5 @@
 package com.legend.ir;
 
-import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Symbol;
 import com.legend.semantic.Type;
 
