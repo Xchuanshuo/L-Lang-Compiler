@@ -45,14 +45,20 @@ public class OpCode {
     public static final OpCode FDIV = new OpCode(Constant.FDIV, "FDIV", REGISTER);
     public static final OpCode SADD = new OpCode(Constant.SADD, "SADD", REGISTER);
 
-    public static final OpCode CMP_LT = new OpCode(Constant.CMP_LT, "CMP_LT", REGISTER);
-    public static final OpCode CMP_LE = new OpCode(Constant.CMP_LE, "CMP_LE", REGISTER);
-    public static final OpCode CMP_GT = new OpCode(Constant.CMP_GT, "CMP_GT", REGISTER);
-    public static final OpCode CMP_GE = new OpCode(Constant.CMP_GE, "CMP_GE", REGISTER);
-    public static final OpCode CMP_EQ = new OpCode(Constant.CMP_EQ, "CMP_EQ", REGISTER);
-    public static final OpCode CMP_NE = new OpCode(Constant.CMP_NE, "CMP_NE", REGISTER);
-    public static final OpCode CMP_AND = new OpCode(Constant.CMP_NE, "CMP_NE", REGISTER);
-    public static final OpCode CMP_OR = new OpCode(Constant.CMP_NE, "CMP_NE", REGISTER);
+    public static final OpCode ICMP_LT = new OpCode(Constant.ICMP_LT, "ICMP_LT", REGISTER);
+    public static final OpCode ICMP_LE = new OpCode(Constant.ICMP_LE, "ICMP_LE", REGISTER);
+    public static final OpCode ICMP_GT = new OpCode(Constant.ICMP_GT, "ICMP_GT", REGISTER);
+    public static final OpCode ICMP_GE = new OpCode(Constant.ICMP_GE, "ICMP_GE", REGISTER);
+    public static final OpCode ICMP_EQ = new OpCode(Constant.ICMP_EQ, "ICMP_EQ", REGISTER);
+    public static final OpCode ICMP_NE = new OpCode(Constant.ICMP_NE, "ICMP_NE", REGISTER);
+    public static final OpCode FCMP_LT = new OpCode(Constant.FCMP_LT, "FCMP_LT", REGISTER);
+    public static final OpCode FCMP_LE = new OpCode(Constant.FCMP_LE, "FCMP_LE", REGISTER);
+    public static final OpCode FCMP_GT = new OpCode(Constant.FCMP_GT, "FCMP_GT", REGISTER);
+    public static final OpCode FCMP_GE = new OpCode(Constant.FCMP_GE, "FCMP_GE", REGISTER);
+    public static final OpCode FCMP_EQ = new OpCode(Constant.FCMP_EQ, "FCMP_EQ", REGISTER);
+    public static final OpCode FCMP_NE = new OpCode(Constant.FCMP_NE, "FCMP_NE", REGISTER);
+    public static final OpCode ICMP_AND = new OpCode(Constant.ICMP_AND, "ICMP_AND", REGISTER);
+    public static final OpCode ICMP_OR = new OpCode(Constant.ICMP_OR, "ICMP_OR", REGISTER);
 
     public static final OpCode JUMP = new OpCode(Constant.JUMP, "JUMP", OFFSET);
     public static final OpCode JUMP_Z = new OpCode(Constant.JUMP_Z, "JUMP_Z", OFFSET);
@@ -72,7 +78,7 @@ public class OpCode {
     public static final OpCode AA_STORE = new OpCode(Constant.AA_STORE, "AA_STORE", REGISTER);
 
     public static final OpCode NEW_INSTANCE = new OpCode(Constant.NEW_INSTANCE, "NEW_INSTANCE", OFFSET1);
-    public static final OpCode GET_FIELD = new OpCode(Constant.GET_FIELD, "GET_S_FIELD", OFFSET1);
+    public static final OpCode GET_FIELD = new OpCode(Constant.GET_FIELD, "GET_FIELD", OFFSET1);
     public static final OpCode GET_S_FIELD = new OpCode(Constant.GET_S_FIELD, "GET_S_FIELD", OFFSET3);
 
     public static final OpCode INVOKE_VIRTUAL = new OpCode(Constant.INVOKE_VIRTUAL, "INVOKE_VIRTUAL", OFFSET2);
@@ -80,7 +86,7 @@ public class OpCode {
     public static final OpCode INVOKE_STATIC = new OpCode(Constant.INVOKE_STATIC, "INVOKE_STATIC", OFFSET4);
 
     public static final OpCode RET = new OpCode(Constant.RET, "RET", AddressingType.NOP);
-    public static final OpCode PRINT = new OpCode(Constant.PRINT, "PRINT", NATIVE);
+    public static final OpCode PRINT = new OpCode(Constant.PRINT, "PRINT", OFFSET5);
     public static final OpCode NOP = new OpCode(Constant.NOP, "NOP", AddressingType.NOP);
 
 

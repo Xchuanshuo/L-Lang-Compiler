@@ -10,6 +10,14 @@ public class ByteCodeReader {
     private byte[] codes;
     private int pc;
 
+    public ByteCodeReader(byte[] codes) {
+        this.codes = codes;
+    }
+
+    public void reset(int pc) {
+        this.pc = pc;
+    }
+
     public void reset(byte[] codes, int pc) {
         this.codes = codes;
         this.pc = pc;
@@ -47,6 +55,10 @@ public class ByteCodeReader {
             ints[i] = this.readInt();
         }
         return ints;
+    }
+
+    public boolean isEnd() {
+        return pc == codes.length;
     }
 
     public void skipPadding() {

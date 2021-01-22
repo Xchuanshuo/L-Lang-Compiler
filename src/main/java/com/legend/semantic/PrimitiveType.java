@@ -3,6 +3,9 @@ package com.legend.semantic;
 import com.legend.lexer.Keyword;
 import com.legend.lexer.Token;
 
+import java.util.Arrays;
+import java.util.List;
+
 import static com.legend.lexer.Keyword.Key.*;
 
 /**
@@ -93,6 +96,11 @@ public class PrimitiveType implements Type {
             type = PrimitiveType.Boolean;
         }
         return type;
+    }
+
+    public static List<Type> baseTypes() {
+        return Arrays.asList(Char, Byte, Short, Integer, Long,
+                Float, Double, Boolean, String, Null);
     }
 
     @Override

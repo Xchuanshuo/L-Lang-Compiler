@@ -9,4 +9,5 @@ public class Slot {
 
     public long num;
     public Object ref;
+    public boolean isRef = false;
 }

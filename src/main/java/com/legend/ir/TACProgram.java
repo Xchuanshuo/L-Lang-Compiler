@@ -113,13 +113,6 @@ public class TACProgram {
                 Constant constant = area.addType((Type) instruction.getArg2());
                 instruction.setArg2(constant);
             }
-//            if (instruction.getArg2() instanceof Function) {
-//                Function function = (Function) instruction.getArg2();
-//                TACInstruction label = findLabelByFunction(function);
-//                Constant constant = area.addFunction(function, 0);
-//                label.setArg1(constant.getValue());
-//                instruction.setArg2(label);
-//            }
             if (instruction.getType() == TACType.GET_FIELD ||
                     instruction.getType() == TACType.GET_STATIC_FIELD) {
                 Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());

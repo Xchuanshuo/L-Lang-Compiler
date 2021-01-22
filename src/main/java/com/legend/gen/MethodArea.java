@@ -21,11 +21,18 @@ public class MethodArea {
     private Map<String, Type> typeMap = new HashMap<>();
     private Map<String, Integer> funcNameToPositionMap = new HashMap<>();
     // 记录offset到label的映射 主要目的是为了方便查看信息
-    private Map<Integer, String> postionToLabelMap = new HashMap<>();
+    private Map<Integer, String> positionToLabelMap = new HashMap<>();
     private Env staticFieldContainer = new Env();
     private GlobalConstantPool constantPool = new GlobalConstantPool();
+    private final Constant globalConst = new Constant(PrimitiveType.String, "GLOBAL");
 
-    private MethodArea() {}
+    private MethodArea() {
+        addConstant(globalConst);
+        for (Type type : PrimitiveType.baseTypes()) {
+            addType(type);
+        }
+    }
+
 
     public Variable getStaticFieldAddress(String className, String fieldName) {
         Class theClass = (Class) typeMap.get(className);
@@ -67,7 +74,7 @@ public class MethodArea {
     }
 
     public Constant addType(Type type) {
-        System.out.println("新增类型: " + type);
+//        System.out.println("新增类型: " + type);
         String typeName = type.toString();
         Constant constant = new Constant(PrimitiveType.String, typeName);
         addConstant(constant);
@@ -77,6 +84,14 @@ public class MethodArea {
 
     public void addConstant(Constant constant) {
         constantPool.add(constant);
+    }
+
+    public Constant getConstByIdx(int idx) {
+        return constantPool.getByIdx(idx);
+    }
+
+    public Constant getGlobalConst() {
+        return globalConst;
     }
 
     public Class getClassByIdx(int idx) {

@@ -22,6 +22,18 @@ public class Constant extends Symbol {
         return value;
     }
 
+    public int getIntVal() {
+        return (int) value;
+    }
+
+    public float getFloatVal() {
+        return (float) value;
+    }
+
+    public String getStrVal() {
+        return (String) value;
+    }
+
     public Type getType() {
         return type;
     }

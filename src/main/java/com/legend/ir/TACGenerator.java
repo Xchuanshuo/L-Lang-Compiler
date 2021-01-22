@@ -44,6 +44,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 visitFunctionDeclaration(fd);
             }
         }
+        addEntry();
         visitBlockStatements(ast.blockStatements());
         return program;
     }
@@ -306,7 +307,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private Symbol translateDotExp(Expr ast) {
         Symbol result = null;
-        Scope scope = at.enclosingScopeOfNode(ast);
+        Scope scope = getScope(ast);
         Object left = visitExpr(ast.leftChild());
         if (left instanceof Variable && ((Variable) left).isArrayType()
                 && ast.rightChild().getToken().getText().equals("length")) {
@@ -356,7 +357,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             // 内置函数
             return translateBuiltInFunction(ast);
         }
-        System.out.println(scope + "---------------------------------");
+//        System.out.println(scope + "---------------------------------");
         List<Symbol> args = getArgsSymbol(ast);
         if (function.isConstructor()) { // 类构造方法
             return translateConstructor(scope, function, args);
@@ -443,7 +444,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         if (scope == null) {
             scope = at.enclosingClassOfNode(ast);
             if (scope == null) {
-                scope = at.enclosingScopeOfNode(ast);
+                scope = at.enclosingNameSpaceOfNode(ast);
             }
         }
         return scope;
@@ -546,15 +547,16 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Object rtn = null;
         String text = ast.getText();
         if (ast instanceof Literal.IntegerLiteral) {
-            rtn = Long.valueOf(ast.getText());
+            rtn = Integer.valueOf(ast.getText());
         } else if (ast instanceof Literal.FloatLiteral) {
-            rtn = Double.valueOf(ast.getText());
+            rtn = Float.valueOf(ast.getText());
         } else if (ast instanceof Literal.StringLiteral) {
             rtn = text.substring(1, text.length() - 1);
         } else if (ast instanceof Literal.CharLiteral) {
             rtn = text.charAt(0);
         } else if (ast instanceof Literal.BooleanLiteral) {
-            rtn = text.equals("true") ? Boolean.TRUE : Boolean.FALSE;
+            at.typeOfNode.put(ast, PrimitiveType.Integer);
+            rtn = text.equals("true") ? 1 : 0;
         } else if (ast instanceof Literal.NullLiteral) {
             rtn = NullObject.instance();
         }

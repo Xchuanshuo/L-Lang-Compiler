@@ -22,14 +22,20 @@ public class Constant {
     public static final byte SADD = 0x20;
 
     // 比较
-    public static final byte CMP_LT = 0x21;
-    public static final byte CMP_LE = 0x22;
-    public static final byte CMP_GT = 0x23;
-    public static final byte CMP_GE = 0x24;
-    public static final byte CMP_EQ = 0x25;
-    public static final byte CMP_NE = 0x26;
-    public static final byte CMP_AND = 0x27;
-    public static final byte CMP_OR = 0x28;
+    public static final byte ICMP_LT = 0x21;
+    public static final byte ICMP_LE = 0x22;
+    public static final byte ICMP_GT = 0x23;
+    public static final byte ICMP_GE = 0x24;
+    public static final byte ICMP_EQ = 0x25;
+    public static final byte ICMP_NE = 0x26;
+    public static final byte FCMP_LT = 0x27;
+    public static final byte FCMP_LE = 0x28;
+    public static final byte FCMP_GT = 0x29;
+    public static final byte FCMP_GE = 0x2A;
+    public static final byte FCMP_EQ = 0x2B;
+    public static final byte FCMP_NE = 0x2C;
+    public static final byte ICMP_AND = 0x2D;
+    public static final byte ICMP_OR = 0x2E;
 
     // 分支与跳转
     public static final byte JUMP = 0x30;

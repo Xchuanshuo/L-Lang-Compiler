@@ -262,6 +262,22 @@ public class AnnotatedTree {
         return enclosingClassOfNode(node.getParent());
     }
 
+    /**
+     * 查找节点所属作命名空间
+     * @param node 节点
+     * @return 类作用域
+     */
+    public NameSpace enclosingNameSpaceOfNode(ASTNode node) {
+        Scope scope = scopeOfNode.get(node);
+        if (scope instanceof NameSpace) {
+            return (NameSpace) scope;
+        } else if (node.getParent() != null) {
+            return enclosingNameSpaceOfNode(node.getParent());
+        } else {
+            return null;
+        }
+    }
+
     // 输出Scope中的内容,包括每个变量的名称、类型
     public String getScopeTreeString() {
         StringBuilder sb = new StringBuilder();

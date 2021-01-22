@@ -13,9 +13,9 @@ public enum AddressingType {
     OFFSET2(4), // r1 r2,offset
     OFFSET3(5), // offset1,offset2 r1
     OFFSET4(5), // r1,offset1,offset2
+    OFFSET5(3), // r1,offset
     IMMEDIATE(3), // r1,IMMEDIATE
-    NOP(0),
-    NATIVE(1);
+    NOP(0);
 
     private int bytes;
 

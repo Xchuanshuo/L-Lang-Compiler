@@ -1,19 +1,18 @@
 package com.legend.compiler;
 
+import com.legend.exception.GeneratorException;
 import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
-import com.legend.gen.OpCodeGenerator;
-import com.legend.gen.OpCodeProgram;
-import com.legend.interpreter.LInterpreter;
+import com.legend.gen.ByteCodeGenerator;
+import com.legend.gen.ByteCodeProgram;
 import com.legend.ir.TACGenerator;
 import com.legend.ir.TACProgram;
-import com.legend.lexer.Lexer;
-import com.legend.lexer.Token;
 import com.legend.parser.Parser;
 import com.legend.parser.Program;
 import com.legend.parser.common.ASTIterator;
 import com.legend.semantic.AnnotatedTree;
 import com.legend.semantic.analyze.*;
+import com.legend.vm.LVM;
 
 import java.io.IOException;
 
@@ -24,9 +23,9 @@ import java.io.IOException;
  */
 public class Compiler {
 
-    public static void main(String[] args) throws IOException, LexicalException, ParseException {
+    public static void main(String[] args) throws IOException, LexicalException, ParseException, GeneratorException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/array.l";
+                "L-Lang-Compiler/example/vm_test1.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -74,10 +73,13 @@ public class Compiler {
 //        tacProgram.dump();
         tacProgram.dumpConstantPool();
 
-        OpCodeGenerator codeGenerator = new OpCodeGenerator(tacProgram);
+        ByteCodeGenerator codeGenerator = new ByteCodeGenerator(tacProgram);
         codeGenerator.generate();
-        OpCodeProgram opCodeProgram = codeGenerator.getProgram();
+        ByteCodeProgram byteCodeProgram = codeGenerator.getProgram();
 
-        opCodeProgram.dumpWithComments();
+        byteCodeProgram.dumpWithComments();
+
+        LVM lvm = new LVM(byteCodeProgram.getByteCodes(), byteCodeProgram.getEntry());
+        lvm.run();
     }
 }

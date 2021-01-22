@@ -14,12 +14,14 @@ import java.util.TreeMap;
  * @data by on 20-12-29.
  * @description 最后生成的指令集合
  */
-public class OpCodeProgram {
+public class ByteCodeProgram {
 
     private List<Instruction> instructions = new ArrayList<>();
     private Map<Integer, String> commentMap = new TreeMap<>();
     // 统计当前指令占用字节数
     private int count = 0;
+    // 程序入口地址
+    private int entry = 0;
 
     public void addIns(Instruction instruction) {
         // 指令1字节 +　对应寻址模式指令所需操作数占用的字节数
@@ -41,6 +43,14 @@ public class OpCodeProgram {
 
     public int getCurPosition() {
         return count;
+    }
+
+    public void setEntry(int entry) {
+        this.entry = entry;
+    }
+
+    public int getEntry() {
+        return entry;
     }
 
     public byte[] getByteCodes() {

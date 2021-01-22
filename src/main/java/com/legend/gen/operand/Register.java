@@ -32,7 +32,7 @@ public class Register extends Operand {
     public static final Register R2 = new Register("r2", (byte) 11);
     public static final Register R3 = new Register("r3", (byte) 12);
 
-    public static final Register LO = new Register("LO", (byte) 20);
+    public static final Register GLOBAL = new Register("GLOBAL", (byte) 20);
 
     public static Register getRegByIdx(int reg) throws GeneratorException {
         if (reg < 0 || reg >= registers.length) {

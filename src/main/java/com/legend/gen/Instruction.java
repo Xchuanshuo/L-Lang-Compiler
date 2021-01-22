@@ -82,13 +82,14 @@ public class Instruction {
     }
 
 
-    public static Instruction print(Register r1) {
+    public static Instruction offset5(Register r1, Offset offset) {
         Instruction instruction = new Instruction(OpCode.PRINT);
         instruction.operands.add(r1);
+        instruction.operands.add(offset);
         return instruction;
     }
 
-    public Instruction decode(ByteCodeReader reader) throws GeneratorException {
+    public static Instruction decode(ByteCodeReader reader) throws GeneratorException {
         byte c = reader.readByte();
         OpCode opCode = OpCode.getOpcode(c);
         Instruction instruction = new Instruction(opCode);
@@ -129,10 +130,9 @@ public class Instruction {
                 instruction.addOperand(Register.getRegByIdx(reader.readByte()));
                 instruction.addOperand(new ImmediateNumber(reader.readShort()));
                 break;
-            case NATIVE:
-                if (opCode.getCode() == PRINT) {
-                    instruction.addOperand(Register.getRegByIdx(reader.readByte()));
-                }
+            case OFFSET5:
+                instruction.addOperand(Register.getRegByIdx(reader.readByte()));
+                instruction.addOperand(Offset.decodeOffset(reader.readShort()));
                 break;
         }
         return instruction;
@@ -180,10 +180,9 @@ public class Instruction {
                     dos.writeByte(operands.get(0).getVal());
                     dos.writeShort(operands.get(1).getVal());
                     break;
-                case NATIVE:
-                    if (opCode.getCode() == PRINT) {
-                        dos.writeByte(operands.get(0).getVal());
-                    }
+                case OFFSET5:
+                    dos.writeByte(operands.get(0).getVal());
+                    dos.writeShort(operands.get(1).getVal());
                     break;
             }
             dos.flush();
@@ -197,7 +196,7 @@ public class Instruction {
         operands.add(operand);
     }
 
-    public Register getRegisterOperand(int idx) {
+    public Register getRegOperand(int idx) {
         return (Register) operands.get(idx);
     }
 

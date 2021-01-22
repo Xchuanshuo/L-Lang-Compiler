@@ -19,13 +19,13 @@ import java.util.Map;
  * @data by on 20-12-29.
  * @description 代码生成器
  */
-public class OpCodeGenerator {
+public class ByteCodeGenerator {
 
-    private OpCodeProgram program = new OpCodeProgram();
+    private ByteCodeProgram program = new ByteCodeProgram();
     private MethodArea area = MethodArea.getInstance();
     private TACProgram tacProgram;
 
-    public OpCodeGenerator(TACProgram tacProgram) {
+    public ByteCodeGenerator(TACProgram tacProgram) {
         this.tacProgram = tacProgram;
     }
 
@@ -36,6 +36,10 @@ public class OpCodeGenerator {
         for (TACInstruction tac : tacInstructions) {
             program.addComment(tac.toString());
             switch (tac.getType()) {
+                case ENTRY:
+                    program.setEntry(program.getCurPosition());
+                    emitNop();
+                    break;
                 case LABEL:
                     Function function = tacProgram.getFunction(tac);
                     if (function != null) {
@@ -60,7 +64,7 @@ public class OpCodeGenerator {
                     genNewArray(tac);
                     break;
                 case ARRAY_LEN:
-                    emitArrLen(Register.SP, (Symbol) tac.getArg1(), Register.R2);
+                    emitArrLen(Register.BP, (Symbol) tac.getArg1(), Register.R2);
                     emitStore(Register.R2, tac.getResult());
                     break;
                 case NEW_INSTANCE:
@@ -86,8 +90,7 @@ public class OpCodeGenerator {
                     genInvokeStaticMethod(tac);
                     break;
                 case PRINT:
-                    emitLoad((Symbol) tac.getArg1(), Register.R1);
-                    emitPrint(Register.R1);
+                    genPrint(tac);
                     break;
                 case RETURN:
                     genReturn(tac);
@@ -95,6 +98,23 @@ public class OpCodeGenerator {
             }
         }
         relocation(labelToPosMap, program.getInstructions());
+    }
+
+    private void genPrint(TACInstruction tac) {
+        Symbol arg1 = (Symbol) tac.getArg1();
+        emitLoad((Symbol) tac.getArg1(), Register.R1);
+        Type type = null;
+        if (arg1 instanceof Constant) {
+            type = ((Constant)arg1).getType();
+        } else if (arg1 instanceof Variable) {
+            type = ((Variable) arg1).getType();
+        }
+        if (type == null) {
+            throw new RuntimeException();
+        }
+        Constant constant = new Constant(PrimitiveType.String, type.name());
+        area.addConstant(constant);
+        emitPrint(Register.R1, constant.getOffset());
     }
 
     private void genPrologue(Function function) { // 函数调用开始
@@ -212,7 +232,7 @@ public class OpCodeGenerator {
         if (tac.getArg2() == null) {
             Symbol arg1 = (Symbol) tac.getArg1();
             emitLoad(arg1, Register.R1);
-            emitStore(Register.R1, arg1);
+            emitStore(Register.R1, tac.getResult());
         } else {
             // 首先处理数组赋值与取值
             if (tac.isArrayAssign()) {
@@ -299,31 +319,99 @@ public class OpCodeGenerator {
                 emitRightShift(r1, r2, r3);
                 break;
             case "<":
-                emitCmpLT(r1, r2, r3);
+                emitCmpLT(getType(arg1, arg2), r1, r2, r3);
                 break;
             case "<=":
-                emitCmpLE(r1, r2, r3);
+                emitCmpLE(getType(arg1, arg2), r1, r2, r3);
                 break;
             case ">":
-                emitCmpGT(r1, r2, r3);
+                emitCmpGT(getType(arg1, arg2), r1, r2, r3);
                 break;
             case ">=":
-                emitCmpGE(r1, r2, r3);
+                emitCmpGE(getType(arg1, arg2), r1, r2, r3);
                 break;
             case "==":
-                emitCmpEQ(r1, r2, r3);
+                emitCmpEQ(getType(arg1, arg2), r1, r2, r3);
                 break;
             case "!=":
-                emitCmpNE(r1, r2, r3);
+                emitCmpNE(getType(arg1, arg2), r1, r2, r3);
                 break;
             case "&&":
-                emitCmpAnd(r1, r3, r3);
+                emitIcmpAnd(r1, r3, r3);
                 break;
             case "||":
-                emitCmpOr(r1, r2, r3);
+                emitIcmpOr(r1, r2, r3);
                 break;
         }
         emitStore(r3, tac.getResult());
+    }
+
+    private Type getType(Object arg1, Object arg2) {
+        Type t1 =  null;
+        if (arg1 instanceof Constant) {
+            t1 = ((Constant) arg1).getType();
+        } else if (arg1 instanceof Variable){
+            t1 = ((Variable) arg1).getType();
+        }
+        Type t2 =  null;
+        if (arg1 instanceof Constant) {
+            t2 = ((Constant) arg1).getType();
+        } else if (arg1 instanceof Variable) {
+            t2 = ((Variable) arg1).getType();
+        }
+        return PrimitiveType.getUpperType(t1, t2);
+    }
+
+    private void emitCmpLT(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpLT(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpLT(r1, r2, r3);
+        }
+    }
+
+    private void emitCmpLE(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpLE(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpLE(r1, r2, r3);
+        }
+    }
+
+    private void emitCmpGT(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpGT(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpGT(r1, r2, r3);
+        }
+    }
+
+    private void emitCmpGE(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpGE(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpGE(r1, r2, r3);
+        }
+    }
+
+    private void emitCmpNE(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpNE(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpNE(r1, r2, r3);
+        } else {
+            emitIcmpNE(r1, r2, r3);
+        }
+    }
+
+    private void emitCmpEQ(Type type, Register r1, Register r2, Register r3) {
+        if (type == PrimitiveType.Integer) {
+            emitIcmpEQ(r1, r2, r3);
+        } else if (type == PrimitiveType.Float) {
+            emitFcmpEQ(r1, r2, r3);
+        } else {
+            emitIcmpEQ(r1, r2, r3);
+        }
     }
 
     private void emitDIV(Type type, Register r1, Register r2, Register r3) {
@@ -437,37 +525,63 @@ public class OpCodeGenerator {
         program.addIns(Instruction.register(OpCode.SADD, r1, r2, r3));
     }
 
-    private void emitCmpLT(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_LT, r1, r2, r3));
+    private void emitIcmpLT(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_LT, r1, r2, r3));
     }
 
-    private void emitCmpLE(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_LE, r1, r2, r3));
+    private void emitIcmpLE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_LE, r1, r2, r3));
     }
 
-    private void emitCmpGT(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_GT, r1, r2, r3));
+    private void emitIcmpGT(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_GT, r1, r2, r3));
     }
 
-    private void emitCmpGE(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_GE, r1, r2, r3));
+    private void emitIcmpGE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_GE, r1, r2, r3));
     }
 
-    private void emitCmpEQ(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_EQ,r1, r2, r3));
+    private void emitIcmpEQ(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_EQ,r1, r2, r3));
     }
 
-    private void emitCmpNE(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_NE, r1, r2, r3));
+    private void emitIcmpNE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_NE, r1, r2, r3));
     }
 
-    private void emitCmpAnd(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_AND, r1, r2, r3));
+    private void emitFcmpLT(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_LT, r1, r2, r3));
     }
 
-    private void emitCmpOr(Register r1, Register r2, Register r3) {
-        program.addIns(Instruction.register(OpCode.CMP_OR, r1, r2, r3));
+    private void emitFcmpLE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_LE, r1, r2, r3));
     }
+
+    private void emitFcmpGT(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_GT, r1, r2, r3));
+    }
+
+    private void emitFcmpGE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_GE, r1, r2, r3));
+    }
+
+    private void emitFcmpEQ(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_EQ,r1, r2, r3));
+    }
+
+    private void emitFcmpNE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.FCMP_NE, r1, r2, r3));
+    }
+
+    private void emitIcmpAnd(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_AND, r1, r2, r3));
+    }
+
+    private void emitIcmpOr(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ICMP_OR, r1, r2, r3));
+    }
+
+
 
     // mem -> register
     private void emitLoad( Symbol src, Register dest) {
@@ -507,7 +621,7 @@ public class OpCodeGenerator {
     private void emitArrLen(Register base, Symbol symbol,
                             Register dest) {
         program.addIns(Instruction.offset1(OpCode.ARR_LEN, base,
-                new Offset(symbol.getOffset()), dest));
+                new Offset(-symbol.getOffset()), dest));
     }
 
     private void emitFALoad(Register base, Register idx, Register dest) {
@@ -561,8 +675,8 @@ public class OpCodeGenerator {
     }
 
     private void emitInvokeStatic(Constant classConst, Constant methodIdx) {
-        if (classConst == null) { // todo 全局方法
-            return;
+        if (classConst == null) {
+            classConst = area.getGlobalConst();
         }
         program.addIns(Instruction.offset4(OpCode.INVOKE_STATIC,
                 Register.SP, new Offset(classConst.getOffset()),
@@ -573,8 +687,8 @@ public class OpCodeGenerator {
         program.addIns(new Instruction(OpCode.RET));
     }
 
-    private void emitPrint(Register r1) {
-        program.addIns(Instruction.print(r1));
+    private void emitPrint(Register r1, int offset) {
+        program.addIns(Instruction.offset5(r1, new Offset(offset)));
     }
 
     private void emitMove(Register src, Register dest) {
@@ -600,7 +714,7 @@ public class OpCodeGenerator {
         program.addIns(new Instruction(OpCode.NOP));
     }
 
-    public OpCodeProgram getProgram() {
+    public ByteCodeProgram getProgram() {
         return program;
     }
 }
