@@ -179,7 +179,7 @@ public class ByteCodeGenerator {
     // 但参数相对于bp寄存器地址为正，所以这里将本身转换为负 就能正确取到参数
     private void fixParamOffset(TACInstruction tac) {
         Symbol symbol = (Symbol) tac.getArg1();
-        symbol.setOffset(-symbol.getOffset());
+        symbol.setOffset(-(symbol.getOffset() + 2));
     }
 
     private void genEpilogue() { // 函数调用尾声

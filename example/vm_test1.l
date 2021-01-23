@@ -1,4 +1,4 @@
-void printHeart() {
+string printHeart(string s, int e) {
     for (float y = 1.5f; y > -1.5f; y -= 0.1f) {
         for (float x = -1.5f; x < 1.5f; x += 0.032f) {
             float a = x * x + y * y - 1
@@ -7,6 +7,9 @@ void printHeart() {
         }
         println()
     }
+    println("我是参数: "  + s + e)
+    s = s + '_new'
+    return s
 }
 
 void _main() {
@@ -19,7 +22,8 @@ void _main() {
         println(i + ": " + sum)
     }
     println(sum)
-    printHeart()
+    string s = printHeart("hello", 12)
+    println(s)
 }
 
 _main()
