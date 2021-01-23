@@ -11,8 +11,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
-import static com.legend.gen.Constant.PRINT;
-
 /**
  * @author Legend
  * @data by on 20-12-28.
@@ -80,7 +78,6 @@ public class Instruction {
         instruction.operands.addAll(Arrays.asList(r1, number));
         return instruction;
     }
-
 
     public static Instruction offset5(Register r1, Offset offset) {
         Instruction instruction = new Instruction(OpCode.PRINT);

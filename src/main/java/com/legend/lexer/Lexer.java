@@ -123,7 +123,7 @@ public class Lexer {
         String val = sb.toString();
         if (Keyword.isKeyword(val)) {
             return buildToken(TokenType.KEYWORD, val, it);
-        } else if ("true".equals(val) || "false".equals(val)) {
+        } else if (Keyword.isBoolLiteral(val)) {
             return buildToken(TokenType.BOOL_LITERAL, val, it);
         } else if ("null".equals(val)){
             return buildToken(TokenType.NULL_LITERAL, val, it);

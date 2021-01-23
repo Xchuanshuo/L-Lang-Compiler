@@ -114,7 +114,9 @@ public class ByteCodeGenerator {
         if (type == null) return;
         if (type == PrimitiveType.Float) {
             emitF2S(Register.R1, Register.R2);
-        } else if (type == PrimitiveType.Integer) {
+        } else if (type == PrimitiveType.Integer
+                || type == PrimitiveType.Boolean) {
+            // todo
             emitI2S(Register.R1, Register.R2);
         }
         emitStore(Register.R2, tac.getResult());
@@ -168,7 +170,6 @@ public class ByteCodeGenerator {
     }
 
     private void genPrologue(Function function) { // 函数调用开始
-        emitMove(Register.PC, Register.RA);
         emitPush(Register.BP);
         emitMove(Register.SP, Register.BP);
         emitDec(Register.SP, function.getLocalsSize());
@@ -729,7 +730,7 @@ public class ByteCodeGenerator {
             classConst = area.getGlobalConst();
         }
         program.addIns(Instruction.offset4(OpCode.INVOKE_STATIC,
-                Register.SP, new Offset(classConst.getOffset()),
+                Register.CONSTANT, new Offset(classConst.getOffset()),
                 new Offset(methodIdx.getOffset())));
     }
 

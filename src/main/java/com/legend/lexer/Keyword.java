@@ -9,6 +9,9 @@ import java.util.*;
  */
 public class Keyword {
 
+    private static final String TRUE = "true";
+    private static final String FALSE = "false";
+
     public enum Key {
         ABSTRACT, ASSERT, BOOLEAN, BREAK, CONTINUE,
         BYTE, CHAR, CLASS, DEFAULT, DOUBLE, FLOAT,
@@ -54,5 +57,9 @@ public class Keyword {
 
     public static boolean isKeyword(String str) {
         return map.values().contains(str);
+    }
+
+    public static boolean isBoolLiteral(String val) {
+        return val.equals(TRUE) || val.equals(FALSE);
     }
 }

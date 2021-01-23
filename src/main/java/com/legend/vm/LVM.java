@@ -9,7 +9,8 @@ import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
 import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Type;
-import com.sun.org.apache.regexp.internal.RE;
+
+import java.util.Stack;
 
 import static com.legend.gen.Constant.*;
 
@@ -24,6 +25,7 @@ public class LVM {
     private Slots registers = new Slots(32);
     private static final int DEFAULT_STACK_SIZE = 10000;
     private MethodArea area = MethodArea.getInstance();
+    private Stack<Integer> retAddressStack = new Stack<>();
     private int entry = 0;
     private Slots stackMemory;
     private final boolean isDebug = false;
@@ -40,9 +42,9 @@ public class LVM {
 
     public void onStart() {
         System.out.println("虚拟机启动---------------------------");
-        registers.setInt(Register.PC.getIdx(), entry);
-        registers.setInt(Register.BP.getIdx(), stackMemory.getSize() - 1);
-        registers.setInt(Register.SP.getIdx(), stackMemory.getSize() - 1);
+        registers.setInt(Register.PC, entry);
+        registers.setInt(Register.BP, stackMemory.getSize() - 1);
+        registers.setInt(Register.SP, stackMemory.getSize() - 1);
     }
 
     public void run() throws GeneratorException {
@@ -52,11 +54,12 @@ public class LVM {
             if (reader.isEnd()) break;
             reader.reset(registers.getInt(Register.PC.getIdx()));
             Instruction ins = Instruction.decode(reader);
+            int step = ins.getOpCode().getAddressingType().getBytes() + 1;
+            registers.setInt(Register.PC, registers.getInt(Register.PC) + step);
             exec(ins);
             if (isDebug) {
                 System.out.println(ins.toString());
             }
-            registers.setInt(Register.PC, reader.pc());
         }
         onStop();
     }
@@ -84,6 +87,27 @@ public class LVM {
                 break;
             case IMOD:
                 imod(ins);
+                break;
+            case BIT_AND:
+                bitAnd(ins);
+                break;
+            case BIT_OR:
+                bitOr(ins);
+                break;
+            case XOR:
+                xor(ins);
+                break;
+            case LSHIFT:
+                leftShift(ins);
+                break;
+            case RSHIFT:
+                rightShift(ins);
+                break;
+            case INC:
+                inc(ins);
+                break;
+            case DEC:
+                dec(ins);
                 break;
             case FADD:
                 fadd(ins);
@@ -150,6 +174,9 @@ public class LVM {
             case JUMP_Z:
                 jumpZ(ins);
                 break;
+            case MOVE:
+                move(ins);
+                break;
             case I2B:
                 i2b(ins);
                 break;
@@ -165,11 +192,27 @@ public class LVM {
             case F2S:
                 f2s(ins);
                 break;
+            case INVOKE_VIRTUAL:
+                break;
+            case INVOKE_SPECIAL:
+                break;
+            case INVOKE_STATIC:
+                invokeStatic(ins);
+                break;
+            case RET:
+                ret();
+                break;
             case PRINT: print(ins); break;
             default:
                 throw new LVMException("No exist any implements for opcode ["
                         + ins.getOpCode().getName() + "]!");
         }
+    }
+
+    private void move(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        registers.setInt(r2, registers.getInt(r1));
     }
 
     private void sadd(Instruction ins) {
@@ -223,6 +266,53 @@ public class LVM {
         int val2 = registers.getInt(ins.getRegOperand(1));
         Register r3 = ins.getRegOperand(2);
         registers.setInt(r3.getIdx(), val1 % val2);
+    }
+
+    private void bitAnd(Instruction ins) {
+        int val1 = registers.getInt(ins.getRegOperand(0));
+        int val2 = registers.getInt(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, val1 & val2);
+    }
+
+    private void bitOr(Instruction ins) {
+        int val1 = registers.getInt(ins.getRegOperand(0));
+        int val2 = registers.getInt(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, val1 | val2);
+    }
+
+    private void xor(Instruction ins) {
+        int val1 = registers.getInt(ins.getRegOperand(0));
+        int val2 = registers.getInt(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, val1 ^ val2);
+    }
+
+    private void leftShift(Instruction ins) {
+        int val1 = registers.getInt(ins.getRegOperand(0));
+        int val2 = registers.getInt(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, val1 << val2);
+    }
+
+    private void rightShift(Instruction ins) {
+        int val1 = registers.getInt(ins.getRegOperand(0));
+        int val2 = registers.getInt(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, val1 >> val2);
+    }
+
+    private void inc(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        int number = ins.getImmediateNumber(1);
+        registers.setInt(r1, registers.getInt(r1) + number);
+    }
+
+    private void dec(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        int number = ins.getImmediateNumber(1);
+        registers.setInt(r1, registers.getInt(r1) - number);
     }
 
     private void fadd(Instruction ins) {
@@ -398,6 +488,8 @@ public class LVM {
                 val = registers.getInt(r1);
             } else if (type == PrimitiveType.Float) {
                 val = registers.getFloat(r1);
+            } else if (type == PrimitiveType.Boolean) {
+                val = registers.getInt(r1) == 1 ? "true" : "false";
             }
         } else {
             val = registers.getRef(r1);
@@ -411,14 +503,14 @@ public class LVM {
 
     private void jump(Instruction ins) {
         Offset offset = ins.getOffsetOperand(0);
-        reader.reset(offset.getOffset());
+        registers.setInt(Register.PC, offset.getOffset());
     }
 
     private void jumpZ(Instruction ins) {
         int val = registers.getInt(Register.ZERO);
         if (val == 0) {
             Offset offset = ins.getOffsetOperand(0);
-            reader.reset(offset.getOffset());
+            registers.setInt(Register.PC, offset.getOffset());
         }
     }
 
@@ -426,7 +518,7 @@ public class LVM {
         int val = registers.getInt(Register.ZERO);
         if (val != 0) {
             Offset offset = ins.getOffsetOperand(0);
-            reader.reset(offset.getOffset());
+            registers.setInt(Register.PC, offset.getOffset());
         }
     }
 
@@ -463,6 +555,19 @@ public class LVM {
         Register r2 = ins.getRegOperand(1);
         float val = registers.getFloat(r1);
         registers.setRef(r2, String.valueOf(val));
+    }
+
+    private void invokeStatic(Instruction ins) {
+        Offset offset1 = ins.getOffsetOperand(1);
+        Offset offset2 = ins.getOffsetOperand(2);
+//        String classConst = area.getConstByIdx(offset1.getOffset()).getStrVal();
+        int methodPos = area.getFuncPosByIdx(offset2.getOffset());
+        retAddressStack.push(registers.getInt(Register.PC));
+        registers.setInt(Register.PC, methodPos);
+    }
+
+    private void ret() {
+        registers.setInt(Register.PC, retAddressStack.pop());
     }
 
     public void onStop() {

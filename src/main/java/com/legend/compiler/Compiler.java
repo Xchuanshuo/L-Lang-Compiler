@@ -66,6 +66,7 @@ public class Compiler {
 //        LInterpreter interpreter = new LInterpreter(at);
 //        program.accept(interpreter);
         TACProgram tacProgram = new TACProgram();
+        // 生成三地址码
         TACGenerator irGenerator = new TACGenerator(at, tacProgram);
         program.accept(irGenerator);
         tacProgram.fillConstantPool();
@@ -73,12 +74,15 @@ public class Compiler {
         tacProgram.dump();
         tacProgram.dumpConstantPool();
 
+
+        // 生成 bytecode
         ByteCodeGenerator codeGenerator = new ByteCodeGenerator(tacProgram);
         codeGenerator.generate();
         ByteCodeProgram byteCodeProgram = codeGenerator.getProgram();
 
         byteCodeProgram.dumpWithComments();
 
+        // 虚拟机解释执行
         LVM lvm = new LVM(byteCodeProgram.getByteCodes(), byteCodeProgram.getEntry());
         lvm.run();
     }

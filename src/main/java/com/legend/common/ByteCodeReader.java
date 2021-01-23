@@ -8,28 +8,28 @@ package com.legend.common;
 public class ByteCodeReader {
 
     private byte[] codes;
-    private int pc;
+    private int position;
 
     public ByteCodeReader(byte[] codes) {
         this.codes = codes;
     }
 
     public void reset(int pc) {
-        this.pc = pc;
+        this.position = pc;
     }
 
     public void reset(byte[] codes, int pc) {
         this.codes = codes;
-        this.pc = pc;
+        this.position = pc;
     }
 
     public int pc() {
-        return this.pc;
+        return this.position;
     }
 
     public byte readByte() {
-        byte code = codes[pc];
-        pc += 1;
+        byte code = codes[position];
+        position += 1;
         return code;
     }
 
@@ -58,11 +58,11 @@ public class ByteCodeReader {
     }
 
     public boolean isEnd() {
-        return pc == codes.length;
+        return position == codes.length;
     }
 
     public void skipPadding() {
-        while (this.pc%4 != 0) {
+        while (this.position %4 != 0) {
             readByte();
         }
     }
