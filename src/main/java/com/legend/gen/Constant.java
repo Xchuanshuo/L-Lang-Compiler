@@ -69,6 +69,13 @@ public class Constant {
     // 返回
     public static final byte RET = 0x76;
 
+    // 类型转换
+    public static final byte I2F = (byte) 0x80;
+    public static final byte I2B = (byte) 0x81;
+    public static final byte I2S = (byte) 0x82;
+    public static final byte F2I = (byte) 0x83;
+    public static final byte F2S = (byte) 0x84;
+
     // native
     public static final byte PRINT = (byte) 0xF0;
     public static final byte NOP = (byte) 0xFF;

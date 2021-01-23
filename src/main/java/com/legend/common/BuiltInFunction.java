@@ -1,5 +1,9 @@
 package com.legend.common;
 
+import com.legend.semantic.PrimitiveType;
+import com.legend.semantic.Type;
+import com.sun.org.apache.regexp.internal.RE;
+
 import java.util.HashMap;
 import java.util.Map;
 
@@ -33,6 +37,19 @@ public class BuiltInFunction {
         for (int i = 0;i < BuiltIn.values().length;i++) {
             map.put(BuiltIn.values()[i], builtInStr[i]);
         }
+    }
+
+    public static BuiltIn getKeyByType(Type type) {
+        if (type == PrimitiveType.Integer) {
+            return BuiltIn.INT;
+        } else if (type == PrimitiveType.Float) {
+            return BuiltIn.FLOAT;
+        } else if (type == PrimitiveType.Byte) {
+            return BuiltIn.BYTE;
+        } else if (type == PrimitiveType.String) {
+            return BuiltIn.STR;
+        }
+        return null;
     }
 
     public static String getValueByKey(BuiltIn key) {

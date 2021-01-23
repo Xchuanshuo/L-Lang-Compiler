@@ -89,6 +89,15 @@ public class ByteCodeGenerator {
                 case INVOKE_STATIC:
                     genInvokeStaticMethod(tac);
                     break;
+                case CAST_INT:
+                    genCastInt(tac);
+                    break;
+                case CAST_FLOAT:
+                    genCastFloat(tac);
+                    break;
+                case CAST_STR:
+                    genCastString(tac);
+                    break;
                 case PRINT:
                     genPrint(tac);
                     break;
@@ -98,6 +107,47 @@ public class ByteCodeGenerator {
             }
         }
         relocation(labelToPosMap, program.getInstructions());
+    }
+
+    private void genCastString(TACInstruction tac) {
+        Type type = getCastSrcType(tac);
+        if (type == null) return;
+        if (type == PrimitiveType.Float) {
+            emitF2S(Register.R1, Register.R2);
+        } else if (type == PrimitiveType.Integer) {
+            emitI2S(Register.R1, Register.R2);
+        }
+        emitStore(Register.R2, tac.getResult());
+    }
+
+    private void genCastFloat(TACInstruction tac) {
+        Type type = getCastSrcType(tac);
+        if (type == null) return;
+        if (type == PrimitiveType.Integer) {
+            emitI2F(Register.R1, Register.R2);
+            emitStore(Register.R2, tac.getResult());
+        }
+    }
+
+    private void genCastInt(TACInstruction tac) {
+        Type type = getCastSrcType(tac);
+        if (type == null) return;
+        if (type == PrimitiveType.Float) {
+            emitF2I(Register.R1, Register.R2);
+            emitStore(Register.R2, tac.getResult());
+        }
+    }
+
+    private Type getCastSrcType(TACInstruction tac) {
+        Symbol arg1 = (Symbol) tac.getArg1();
+        emitLoad(arg1, Register.R1);
+        Type type = null;
+        if (arg1 instanceof Constant) {
+            type = ((Constant) arg1).getType();
+        } else if (arg1 instanceof Variable) {
+            type = ((Variable) arg1).getType();
+        }
+        return type;
     }
 
     private void genPrint(TACInstruction tac) {
@@ -681,6 +731,26 @@ public class ByteCodeGenerator {
         program.addIns(Instruction.offset4(OpCode.INVOKE_STATIC,
                 Register.SP, new Offset(classConst.getOffset()),
                 new Offset(methodIdx.getOffset())));
+    }
+
+    private void emitI2F(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.I2F, r1, r2));
+    }
+
+    private void emitI2B(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.I2B, r1, r2));
+    }
+
+    private void emitI2S(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.I2S, r1, r2));
+    }
+
+    private void emitF2I(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.F2I, r1, r2));
+    }
+
+    private void emitF2S(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.F2S, r1, r2));
     }
 
     private void emitRet() {

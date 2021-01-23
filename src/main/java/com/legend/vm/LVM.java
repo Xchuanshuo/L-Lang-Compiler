@@ -2,12 +2,14 @@ package com.legend.vm;
 
 import com.legend.common.ByteCodeReader;
 import com.legend.exception.GeneratorException;
+import com.legend.exception.LVMException;
 import com.legend.gen.Instruction;
 import com.legend.gen.MethodArea;
 import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
 import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Type;
+import com.sun.org.apache.regexp.internal.RE;
 
 import static com.legend.gen.Constant.*;
 
@@ -148,7 +150,25 @@ public class LVM {
             case JUMP_Z:
                 jumpZ(ins);
                 break;
+            case I2B:
+                i2b(ins);
+                break;
+            case I2F:
+                i2f(ins);
+                break;
+            case I2S:
+                i2s(ins);
+                break;
+            case F2I:
+                f2i(ins);
+                break;
+            case F2S:
+                f2s(ins);
+                break;
             case PRINT: print(ins); break;
+            default:
+                throw new LVMException("No exist any implements for opcode ["
+                        + ins.getOpCode().getName() + "]!");
         }
     }
 
@@ -207,7 +227,7 @@ public class LVM {
 
     private void fadd(Instruction ins) {
         float val1 = registers.getFloat(ins.getRegOperand(0));
-        float val2 = registers.getInt(ins.getRegOperand(1));
+        float val2 = registers.getFloat(ins.getRegOperand(1));
         Register r3 = ins.getRegOperand(2);
         registers.setFloat(r3, val1 + val2);
     }
@@ -408,6 +428,41 @@ public class LVM {
             Offset offset = ins.getOffsetOperand(0);
             reader.reset(offset.getOffset());
         }
+    }
+
+    private void i2b(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        int val = registers.getInt(r1);
+        registers.setInt(r2, (byte)val);
+    }
+
+    private void i2f(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        int val = registers.getInt(r1);
+        registers.setFloat(r2, (float) val);
+    }
+
+    private void i2s(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        int val = registers.getInt(r1);
+        registers.setRef(r2, String.valueOf(val));
+    }
+
+    private void f2i(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        float val = registers.getFloat(r1);
+        registers.setInt(r2, (int) val);
+    }
+
+    private void f2s(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        float val = registers.getFloat(r1);
+        registers.setRef(r2, String.valueOf(val));
     }
 
     public void onStop() {

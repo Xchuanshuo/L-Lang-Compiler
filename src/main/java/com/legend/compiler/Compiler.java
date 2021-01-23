@@ -70,7 +70,7 @@ public class Compiler {
         program.accept(irGenerator);
         tacProgram.fillConstantPool();
 
-//        tacProgram.dump();
+        tacProgram.dump();
         tacProgram.dumpConstantPool();
 
         ByteCodeGenerator codeGenerator = new ByteCodeGenerator(tacProgram);

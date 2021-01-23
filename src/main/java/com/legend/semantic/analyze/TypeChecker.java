@@ -1,12 +1,13 @@
 package com.legend.semantic.analyze;
 
-import com.legend.parser.ast.ASTNode;
-import com.legend.parser.ast.ArrayCall;
-import com.legend.parser.ast.Expr;
-import com.legend.parser.ast.VariableDeclarator;
+import com.legend.common.BuiltInFunction;
+import com.legend.lexer.Token;
+import com.legend.lexer.TokenType;
+import com.legend.parser.ast.*;
 import com.legend.parser.common.BaseASTListener;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
+import com.legend.semantic.PrimitiveType;
 
 /**
  * @author Legend
@@ -52,6 +53,7 @@ public class TypeChecker extends BaseASTListener {
                     checkNumericOperand(type1, (Expr) ast.getChild(0), ast);
                     checkNumericOperand(type2, (Expr) ast.getChild(1), ast);
                 }
+                typeImplicitCast(ast);
                 break;
             case SUB:
             case MUL:
@@ -59,6 +61,7 @@ public class TypeChecker extends BaseASTListener {
             case MOD:
                 checkNumericOperand(type1, (Expr) ast.getChild(0), ast);
                 checkNumericOperand(type2, (Expr) ast.getChild(1), ast);
+                typeImplicitCast(ast);
                 break;
             case LOGIC_AND:
             case LOGIC_OR:
@@ -75,6 +78,7 @@ public class TypeChecker extends BaseASTListener {
             case MOD_ASSIGN:
                 checkNumericOperand(type2, (Expr) ast.getChild(1), ast);
                 checkAssign(type1, type2, ast.getChild(0), ast.getChild(1), ast);
+                typeImplicitCast(ast);
                 break;
             case LSHIFT:
             case RSHIFT:
@@ -96,6 +100,7 @@ public class TypeChecker extends BaseASTListener {
             case GE:
                 checkNumericOperand(type1, (Expr) ast.getChild(0), ast);
                 checkNumericOperand(type2, (Expr) ast.getChild(1), ast);
+                typeImplicitCast(ast);
                 break;
         }
     }
@@ -107,6 +112,33 @@ public class TypeChecker extends BaseASTListener {
                 Type type = at.typeOfNode.get(expr);
                 checkIntOperand(type, expr, ast);
             }
+        }
+    }
+
+    // 隐式类型转换
+    private void typeImplicitCast(Expr expr) {
+        Type type1 = at.typeOfNode.get(expr.leftChild());
+        Type type2 = at.typeOfNode.get(expr.rightChild());
+        Type upperType = PrimitiveType.getUpperType(type1, type2);
+        BuiltInFunction.BuiltIn key = BuiltInFunction.getKeyByType(upperType);
+        if (key == null) return;
+        if (type1 != upperType) {
+            FunctionCall castFunCall = new FunctionCall();
+            Token token = new Token(TokenType.KEYWORD, BuiltInFunction.getValueByKey(key));
+            ExprList exprList = new ExprList();
+            exprList.addChild(expr.leftChild());
+            castFunCall.addChild(new TerminalNode(token));
+            castFunCall.addChild(exprList);
+            expr.setLeftChild(castFunCall);
+        }
+        if (type2 != upperType) {
+            FunctionCall castFunCall = new FunctionCall();
+            Token token = new Token(TokenType.KEYWORD, BuiltInFunction.getValueByKey(key));
+            ExprList exprList = new ExprList();
+            exprList.addChild(expr.rightChild());
+            castFunCall.addChild(new TerminalNode(token));
+            castFunCall.addChild(exprList);
+            expr.setRightChild(castFunCall);
         }
     }
 

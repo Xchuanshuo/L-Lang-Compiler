@@ -85,6 +85,13 @@ public class OpCode {
     public static final OpCode INVOKE_SPECIAL = new OpCode(Constant.INVOKE_SPECIAL, "INVOKE_SPECIAL", OFFSET2);
     public static final OpCode INVOKE_STATIC = new OpCode(Constant.INVOKE_STATIC, "INVOKE_STATIC", OFFSET4);
 
+    public static final OpCode I2F = new OpCode(Constant.I2F, "i2f", REGISTER1);
+    public static final OpCode I2B = new OpCode(Constant.I2B, "i2b", REGISTER1);
+    public static final OpCode I2S = new OpCode(Constant.I2S, "i2s", REGISTER1);
+    public static final OpCode F2I = new OpCode(Constant.F2I, "f2i", REGISTER1);
+    public static final OpCode F2S = new OpCode(Constant.F2S, "f2s", REGISTER1);
+
+
     public static final OpCode RET = new OpCode(Constant.RET, "RET", AddressingType.NOP);
     public static final OpCode PRINT = new OpCode(Constant.PRINT, "PRINT", OFFSET5);
     public static final OpCode NOP = new OpCode(Constant.NOP, "NOP", AddressingType.NOP);
