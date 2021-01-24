@@ -4,6 +4,7 @@ import com.legend.interpreter.Env;
 import com.legend.ir.Constant;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
+import com.legend.vm.BuiltInClass;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -30,6 +31,8 @@ public class MethodArea {
         addConstant(globalConst);
         for (Type type : PrimitiveType.baseTypes()) {
             addType(type);
+            Type t = Class.arrayClass(type.name() + "[");
+            typeMap.put(t.name(), t);
         }
     }
 
@@ -74,13 +77,24 @@ public class MethodArea {
     }
 
     public Constant addType(Type type) {
-//        System.out.println("新增类型: " + type);
-        String typeName = type.toString();
+        String typeName = type.toString().replace("null_", "");
         Constant constant = new Constant(PrimitiveType.String, typeName);
         addConstant(constant);
+        if (typeMap.containsKey(typeName)) {
+            return constant;
+        }
         typeMap.put(type.toString(), type);
         return constant;
     }
+
+    public void addType(String name, Type type) {
+        typeMap.put(name, type);
+    }
+
+    public Type getTypeByName(String name) {
+        return typeMap.get(name);
+    }
+
 
     public void addConstant(Constant constant) {
         constantPool.add(constant);
@@ -96,7 +110,27 @@ public class MethodArea {
 
     public Class getClassByIdx(int idx) {
         String typeName = String.valueOf(constantPool.getByIdx(idx).getValue());
-        return (Class) typeMap.get(typeName);
+        Type type = typeMap.get(typeName);
+        if (type instanceof ArrayType) {
+            return loadArrayClass(type.name());
+        } else if (type instanceof FunctionType) {
+            return null;
+        } else {
+            return (Class) typeMap.get(typeName);
+        }
+    }
+
+    public Class loadArrayClass(String name) {
+        Class clazz = null;
+        Type type = typeMap.get(name);
+        if (!(type instanceof Class)) {
+            clazz = new Class(name, null);
+            clazz.setParentClass(Class.rootClass);
+            typeMap.put(name, clazz);
+        } else {
+            clazz = (Class) type;
+        }
+        return clazz;
     }
 
     public Function getFunctionByIdx(int idx) {

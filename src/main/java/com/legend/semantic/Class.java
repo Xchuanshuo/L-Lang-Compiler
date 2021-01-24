@@ -1,8 +1,10 @@
 package com.legend.semantic;
 
+import com.legend.gen.MethodArea;
 import com.legend.parser.ast.ASTNode;
 import com.legend.semantic.Variable.Super;
 import com.legend.semantic.Variable.This;
+import com.legend.vm.Object;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -39,7 +41,13 @@ public class Class extends Scope implements Type {
         superRef.setType(parentClass);
     }
 
-    private static Class rootClass = new Class("Object", null);
+    public static Class rootClass = new Class("Object", null);
+
+    public static Class arrayClass(String name) {
+        Class clazz = new Class(name, null);
+        clazz.setParentClass(rootClass);
+        return clazz;
+    }
 
     public This getThis() {
         return thisRef;
@@ -177,5 +185,39 @@ public class Class extends Scope implements Type {
             defaultConstructor = new DefaultConstructor(name, this);
         }
         return defaultConstructor;
+    }
+
+    public boolean isArray() {
+        return name.endsWith("[");
+    }
+
+    public Class getComponentClass() {
+        if (isArray()) {
+            String componentName = name.substring(0, name.length() - 1);
+            return MethodArea.getInstance().loadArrayClass(componentName);
+        }
+        return null;
+    }
+
+    public Object newObj() {
+        return new Object(this);
+    }
+
+    public Object newArrayObj(int count) {
+        if (!isArray()) {
+            throw new RuntimeException("Not array class " + this.name);
+        }
+        switch (name) {
+            case "Byte[":
+                return new Object(this, new byte[count]);
+            case "Integer[":
+                return new Object(this, new int[count]);
+            case "Float[":
+                return new Object(this, new float[count]);
+            case "Boolean[":
+                return new Object(this, new boolean[count]);
+            default:
+                return new Object(this, new Object[count]);
+        }
     }
 }

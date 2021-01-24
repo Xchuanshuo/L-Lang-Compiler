@@ -23,7 +23,7 @@ public class ArrayType implements Type {
 
     @Override
     public String name() {
-        return baseType.name();
+        return toString();
     }
 
     public Type baseType() {

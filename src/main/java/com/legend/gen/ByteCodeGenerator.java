@@ -300,7 +300,7 @@ public class ByteCodeGenerator {
     private void emitArrayAssign(TACInstruction tac) {
         Variable base = tac.getResult();
         Symbol idx = (Symbol) tac.getArg1();
-        Symbol val = (Symbol) tac.getArg1();
+        Symbol val = (Symbol) tac.getArg2();
         emitLoad(val, Register.R1);
         emitLoad(base, Register.R2);
         emitLoad(idx, Register.R3);
@@ -317,7 +317,7 @@ public class ByteCodeGenerator {
     private void emitArrayGetVal(TACInstruction tac) {
         Variable res = tac.getResult();
         Variable base = (Variable) tac.getArg1();
-        Symbol idx = (Symbol) tac.getArg1();
+        Symbol idx = (Symbol) tac.getArg2();
         emitLoad(base, Register.R1);
         emitLoad(idx, Register.R2);
         Type type = ((ArrayType)base.getType()).baseType();

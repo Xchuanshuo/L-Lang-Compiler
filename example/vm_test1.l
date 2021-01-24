@@ -9,6 +9,9 @@ string printHeart(string s, int e) {
     }
     println("我是参数: "  + s + e)
     s = s + '_new'
+    if (e > 0) {
+        printHeart(s, e - 1)
+    }
     return s
 }
 
@@ -22,7 +25,7 @@ void _main() {
         println(i + ": " + sum)
     }
     println(sum)
-    string s = printHeart("hello", 12)
+    string s = printHeart("hello", 2)
     println(s)
 }
 

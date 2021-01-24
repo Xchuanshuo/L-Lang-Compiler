@@ -58,7 +58,7 @@ public class ByteCodeReader {
     }
 
     public boolean isEnd() {
-        return position == codes.length;
+        return position >= codes.length;
     }
 
     public void skipPadding() {

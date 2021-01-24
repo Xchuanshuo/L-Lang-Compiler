@@ -7,6 +7,7 @@ import com.legend.gen.Instruction;
 import com.legend.gen.MethodArea;
 import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
+import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Type;
 
@@ -42,6 +43,7 @@ public class LVM {
 
     public void onStart() {
         System.out.println("虚拟机启动---------------------------");
+        BuiltInClass.init();
         registers.setInt(Register.PC, entry);
         registers.setInt(Register.BP, stackMemory.getSize() - 1);
         registers.setInt(Register.SP, stackMemory.getSize() - 1);
@@ -51,8 +53,8 @@ public class LVM {
         onStart();
         // 1.取指 2.译码 3.执行
         while (true) {
-            if (reader.isEnd()) break;
             reader.reset(registers.getInt(Register.PC.getIdx()));
+            if (reader.isEnd()) break;
             Instruction ins = Instruction.decode(reader);
             int step = ins.getOpCode().getAddressingType().getBytes() + 1;
             registers.setInt(Register.PC, registers.getInt(Register.PC) + step);
@@ -60,6 +62,10 @@ public class LVM {
             if (isDebug) {
                 System.out.println(ins.toString());
             }
+//            try {
+//                Thread.sleep(500);
+//            } catch (InterruptedException e) {
+//            }
         }
         onStop();
     }
@@ -192,6 +198,30 @@ public class LVM {
             case F2S:
                 f2s(ins);
                 break;
+            case NEW_ARR:
+                newArr(ins);
+                break;
+            case ARR_LEN:
+                arrLen(ins);
+                break;
+            case IA_LOAD:
+                iaload(ins);
+                break;
+            case FA_LOAD:
+                faload(ins);
+                break;
+            case AA_LOAD:
+                aaload(ins);
+                break;
+            case IA_STORE:
+                iastore(ins);
+                break;
+            case FA_STORE:
+                fastore(ins);
+                break;
+            case AA_STORE:
+                aastore(ins);
+                break;
             case INVOKE_VIRTUAL:
                 break;
             case INVOKE_SPECIAL:
@@ -216,21 +246,12 @@ public class LVM {
     }
 
     private void sadd(Instruction ins) {
-        Object v1, v2;
         Register r1 = ins.getRegOperand(0);
         Register r2 = ins.getRegOperand(1);
-        if (registers.isRef(r1)) {
-            v1 = registers.getRef(r1);
-        } else {
-            v1 = registers.getInt(r1);
-        }
-        if (registers.isRef(r2)) {
-            v2 = registers.getRef(r2);
-        } else {
-            v2 = registers.getInt(r2);
-        }
+        String v1 = registers.getRef(r1).toString();
+        String v2 = registers.getRef(r2).toString();
         Register r3 = ins.getRegOperand(2);
-        registers.setRef(r3, String.valueOf(v1) + String.valueOf(v2));
+        registers.setRef(r3, StringPool.getStrObj(v1 + v2));
     }
 
     private void iadd(Instruction ins) {
@@ -453,7 +474,7 @@ public class LVM {
             } else if (cst.getType() == PrimitiveType.Float) {
                 registers.setFloat(r3.getIdx(), cst.getFloatVal());
             } else if (cst.getType() == PrimitiveType.String) {
-                registers.setRef(r3.getIdx(), cst.getStrVal());
+                registers.setRef(r3.getIdx(), StringPool.getStrObj(cst.getStrVal()));
             }
         } else {
             int address = registers.getInt(r1.getIdx()) + offset.getOffset();
@@ -479,7 +500,7 @@ public class LVM {
     }
 
     private void print(Instruction ins) {
-        Object val = null;
+        java.lang.Object val = null;
         Register r1 = ins.getRegOperand(0);
         if (!registers.isRef(r1)) {
             Offset offset = ins.getOffsetOperand(1);
@@ -492,7 +513,7 @@ public class LVM {
                 val = registers.getInt(r1) == 1 ? "true" : "false";
             }
         } else {
-            val = registers.getRef(r1);
+            val = registers.getRef(r1).toString();
         }
         if (val != null && val.equals("\\n")) {
             System.out.println();
@@ -540,7 +561,7 @@ public class LVM {
         Register r1 = ins.getRegOperand(0);
         Register r2 = ins.getRegOperand(1);
         int val = registers.getInt(r1);
-        registers.setRef(r2, String.valueOf(val));
+        registers.setRef(r2, StringPool.getStrObj(String.valueOf(val)));
     }
 
     private void f2i(Instruction ins) {
@@ -554,7 +575,76 @@ public class LVM {
         Register r1 = ins.getRegOperand(0);
         Register r2 = ins.getRegOperand(1);
         float val = registers.getFloat(r1);
-        registers.setRef(r2, String.valueOf(val));
+        registers.setRef(r2, StringPool.getStrObj(String.valueOf(val)));
+    }
+
+    private void newArr(Instruction ins) {
+        Register lenR = ins.getRegOperand(0);
+        Offset offset = ins.getOffsetOperand(1);
+        Register tR = ins.getRegOperand(2);
+        Class clazz = area.getClassByIdx(offset.getOffset());
+        Object arrObj = clazz.newArrayObj(registers.getInt(lenR));
+        registers.setRef(tR, arrObj);
+    }
+
+    private void arrLen(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Offset offset = ins.getOffsetOperand(1);
+        int address = registers.getInt(r1) + offset.getOffset();
+        Object ref = stackMemory.getRef(address);
+        Register r3 = ins.getRegOperand(2);
+        registers.setInt(r3, ref.arrayLength());
+    }
+
+    private void iaload(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        int[] ints = registers.getRef(r1).ints();
+        registers.setInt(r3, ints[registers.getInt(r2)]);
+    }
+
+    private void faload(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        float[] floats = registers.getRef(r1).floats();
+        registers.setFloat(r3, floats[registers.getInt(r2)]);
+    }
+
+    private void aaload(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        Object[] objs = registers.getRef(r1).objs();
+        registers.setRef(r3, objs[registers.getInt(r2)]);
+    }
+
+    private void iastore(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        int val = registers.getInt(r1);
+        int[] ints = registers.getRef(r2).ints();
+        ints[registers.getInt(r3)] = val;
+    }
+
+    private void fastore(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        float val = registers.getFloat(r1);
+        float[] floats = registers.getRef(r2).floats();
+        floats[registers.getInt(r3)] = val;
+    }
+
+    private void aastore(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        Register r3 = ins.getRegOperand(2);
+        Object val = registers.getRef(r1);
+        Object[] objs = registers.getRef(r2).objs();
+        objs[registers.getInt(r3)] = val;
     }
 
     private void invokeStatic(Instruction ins) {
