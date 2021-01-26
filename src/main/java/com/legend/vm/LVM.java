@@ -43,7 +43,7 @@ public class LVM {
     }
 
     public void onStart() {
-        System.out.println("虚拟机启动---------------------------");
+        System.out.println("-----------------------虚拟机启动-------------------------------");
         BuiltInClass.init();
         registers.setInt(Register.PC, entry);
         registers.setInt(Register.BP, stackMemory.getSize() - 1);
@@ -235,8 +235,9 @@ public class LVM {
             case PUT_FIELD:
                 putField(ins);
                 break;
-//            case PUT_S_FIELD:
-//                break;
+            case PUT_S_FIELD:
+                putStaticField(ins);
+                break;
             case INVOKE_VIRTUAL:
                 invokeVirtual(ins);
                 break;
@@ -265,8 +266,17 @@ public class LVM {
     private void sadd(Instruction ins) {
         Register r1 = ins.getRegOperand(0);
         Register r2 = ins.getRegOperand(1);
-        String v1 = registers.getRef(r1).toString();
-        String v2 = registers.getRef(r2).toString();
+        String v1, v2;
+        if (registers.getRef(r1) == null) {
+            v1 = "";
+        } else {
+            v1 = registers.getRef(r1).toString();
+        }
+        if (registers.getRef(r2) == null) {
+            v2 = "";
+        } else {
+            v2 = registers.getRef(r2).toString();
+        }
         Register r3 = ins.getRegOperand(2);
         registers.setRef(r3, StringPool.getStrObj(v1 + v2));
     }
@@ -681,18 +691,7 @@ public class LVM {
         int id = variable.getOffset();
         Slots fieldSlots = ref.fieldSlots();
         Type type = variable.getType();
-        if (type == PrimitiveType.Byte || type == PrimitiveType.Integer
-                || type == PrimitiveType.Boolean) {
-            registers.setInt(resultR, fieldSlots.getInt(id));
-        } else if (type == PrimitiveType.Float) {
-            registers.setFloat(resultR, fieldSlots.getFloat(id));
-        } else {
-            registers.setRef(resultR, fieldSlots.getRef(id));
-        }
-    }
-
-    private void getStaticField(Instruction ins) {
-
+        setValByType(type, fieldSlots, registers, id, resultR.getIdx());
     }
 
     private void putField(Instruction ins) {
@@ -709,6 +708,45 @@ public class LVM {
             ref.fieldSlots().setFloat(id, registers.getFloat(valR));
         } else {
             ref.fieldSlots().setRef(id, registers.getRef(valR));
+        }
+        setValByType(type, registers, ref.fieldSlots(), valR.getIdx(), id);
+    }
+
+    private void getStaticField(Instruction ins) {
+        Offset offset1 = ins.getOffsetOperand(0);
+        Offset offset2 = ins.getOffsetOperand(1);
+        Register tR = ins.getRegOperand(2);
+        String className = area.getStrConstByIdx(offset1.getOffset());
+        String fieldName = area.getStrConstByIdx(offset2.getOffset());
+        Variable field = area.getStaticField(className, fieldName);
+        int id = field.getOffset();
+        Slots slots = area.staticVarSlots(className);
+        Type type = field.getType();
+        setValByType(type, slots, registers, id, tR.getIdx());
+    }
+
+    private void putStaticField(Instruction ins) {
+        Register valR = ins.getRegOperand(0);
+        Offset offset1 = ins.getOffsetOperand(1);
+        Offset offset2 = ins.getOffsetOperand(2);
+        String className = area.getStrConstByIdx(offset1.getOffset());
+        String fieldName = area.getStrConstByIdx(offset2.getOffset());
+        Variable field = area.getStaticField(className, fieldName);
+        int id = field.getOffset();
+        Slots slots = area.staticVarSlots(className);
+        Type type = field.getType();
+        setValByType(type, registers, slots, valR.getIdx(), id);
+    }
+
+    private void setValByType(Type type, Slots srcSlots, Slots destSlots,
+                              int srcId, int destId) {
+        if (type == PrimitiveType.Byte || type == PrimitiveType.Integer
+                || type == PrimitiveType.Boolean) {
+            destSlots.setInt(destId, srcSlots.getInt(srcId));
+        } else if (type == PrimitiveType.Float) {
+            destSlots.setFloat(destId, srcSlots.getFloat(srcId));
+        }  else {
+            destSlots.setRef(destId, srcSlots.getRef(srcId));
         }
     }
 
@@ -740,6 +778,6 @@ public class LVM {
     }
 
     public void onStop() {
-        System.out.println("虚拟机停止---------------------------");
+        System.out.println("-----------------------虚拟机停止-------------------------------");
     }
 }

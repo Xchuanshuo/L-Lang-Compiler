@@ -20,9 +20,10 @@ public class Class extends Scope implements Type {
     private Class parentClass = null;
     private This thisRef = null;
     private Super superRef = null;
-    // 静态符号表 存储类的静态成员 以及 静态方法
+    // 静态符号表 存储类的静态成员以及静态方法
     private List<Symbol> staticSymbolTable = new ArrayList<>();
     private List<Variable> fields;
+    private List<Variable> staticFields;
 
     private DefaultConstructor defaultConstructor;
 
@@ -53,6 +54,29 @@ public class Class extends Scope implements Type {
 
     public List<Variable> fields() {
         return fields;
+    }
+
+    public List<Variable> getStaticFields() {
+        if (staticFields != null) {
+            return staticFields;
+        }
+        calculateStaticFields();
+        return staticFields;
+    }
+
+    public void calculateStaticFields() {
+        if (staticFields != null) return;
+        staticFields = new ArrayList<>();
+        int i = 0;
+        if (parentClass != null) {
+            i = parentClass.getStaticFields().size();
+        }
+        for (Symbol symbol : staticSymbolTable) {
+            if (symbol instanceof Variable) {
+                symbol.setOffset(i++);
+                staticFields.add((Variable) symbol);
+            }
+        }
     }
 
     public void calculateFields() {
@@ -115,9 +139,8 @@ public class Class extends Scope implements Type {
 
     public Variable findStaticVariable(String name) {
         Variable variable = null;
-        for (Symbol symbol : staticSymbolTable) {
-            if (symbol instanceof Variable && symbol.isStatic()
-                    && symbol.name.equals(name)) {
+        for (Symbol symbol : getStaticFields()) {
+            if (symbol instanceof Variable && symbol.name.equals(name)) {
                 variable = (Variable) symbol;
                 break;
             }

@@ -5,8 +5,10 @@ import com.legend.ir.Constant;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
 import com.legend.vm.BuiltInClass;
+import com.legend.vm.Slots;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -23,7 +25,7 @@ public class MethodArea {
     private Map<String, Integer> funcNameToPositionMap = new HashMap<>();
     // 记录offset到label的映射 主要目的是为了方便查看信息
     private Map<Integer, String> positionToLabelMap = new HashMap<>();
-    private Env staticFieldContainer = new Env();
+    private Map<String, Slots> staticFieldSlotsMap = new HashMap<>();
     private GlobalConstantPool constantPool = new GlobalConstantPool();
     private final Constant globalConst = new Constant(PrimitiveType.String, "GLOBAL");
 
@@ -36,8 +38,7 @@ public class MethodArea {
         }
     }
 
-
-    public Variable getStaticFieldAddress(String className, String fieldName) {
+    public Variable getStaticField(String className, String fieldName) {
         Class theClass = (Class) typeMap.get(className);
         if (theClass == null) {
             throw new RuntimeException("No exist a class name of " + className);
@@ -50,22 +51,17 @@ public class MethodArea {
         return staticField;
     }
 
-    public Object getStaticFieldValue(String className, String fieldName) {
-        Variable variable = getStaticFieldAddress(className, fieldName);
-        return staticFieldContainer.getValue(variable);
-    }
-
-    public Object getStaticFieldValue(Variable variable) {
-        return staticFieldContainer.getValue(variable);
-    }
-
-    public void setStaticFieldValue(String className, String fieldName, Object value) {
-        Variable variable = getStaticFieldAddress(className, fieldName);
-        staticFieldContainer.setValue(variable, value);
-    }
-
-    public void setStaticFieldValue(Variable variable, Object value) {
-        staticFieldContainer.setValue(variable, value);
+    public Slots staticVarSlots(String className) {
+        Class theClass = (Class) typeMap.get(className);
+        if (theClass == null) {
+            throw new RuntimeException("No exist a class name of " + className);
+        }
+        if (!staticFieldSlotsMap.containsKey(className)) {
+            List<Variable> variables = theClass.getStaticFields();
+            Slots slots = new Slots(variables.size());
+            staticFieldSlotsMap.put(className, slots);
+        }
+        return staticFieldSlotsMap.get(className);
     }
 
     public void setConstantPool(GlobalConstantPool constantPool) {
