@@ -3,6 +3,7 @@ package com.legend.ir;
 import com.legend.exception.InterpreterException;
 import com.legend.semantic.ArrayType;
 import com.legend.semantic.Variable;
+import com.legend.vm.StringPool;
 
 /**
  * @author Legend
@@ -141,11 +142,19 @@ public class TACInstruction {
                 }
             case GET_FIELD:
                 return String.format("%s = %s GET_FIELD %s", result, arg1, arg2);
+            case PUT_FIELD:
+                return String.format("%s PUT_FIELD %s %s", result, arg1, arg2);
             case GET_STATIC_FIELD:
                 if (arg2 != null) {
                     return String.format("%s = %s GET_STATIC_FIELD %s", result, arg1, arg2);
                 } else {
                     return String.format("%s = GET_STATIC_FIELD %s", result, arg1);
+                }
+            case PUT_STATIC_FIELD:
+                if (arg2 != null) {
+                    return String.format("%s PUT_STATIC_FIELD %s %s", arg1, arg2, result);
+                } else {
+                    return String.format("PUT_STATIC_FIELD %s %s", arg1, result);
                 }
         }
         throw new InterpreterException("Unknown opcode type:" + type);

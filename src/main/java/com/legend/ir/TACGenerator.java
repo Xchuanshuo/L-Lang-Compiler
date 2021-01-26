@@ -27,7 +27,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     private AnnotatedTree at;
     // 建立变量与新创建变量的映射
     private Map<Variable, Variable> variableMap = new HashMap<>();
-    private Queue<Object> tmpData = new LinkedList<>();
+    private Queue<Object> tmpIdxData = new LinkedList<>();
+    private Queue<Variable> tmpFieldData = new LinkedList<>();
     private Stack<TACInstruction> breakStack = new Stack<>();
 
     public TACGenerator(AnnotatedTree at, TACProgram tacProgram) {
@@ -90,20 +91,6 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 s = variableMap.get(s);
                 TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
                 program.add(instruction);
-//                if (rtn instanceof Constant) {
-//                    // 常量分配新的名字
-//                    Variable variable = s.getEnclosingScope()
-//                            .createTempVariable(at.typeOfNode.get(s.getAstNode()));
-//                    if (!variableMap.containsKey(s)) {
-//                        variableMap.put((Variable) s, variable);
-//                    }
-//                    s = variableMap.get(s);
-//                    TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
-//                    program.add(instruction);
-//                } else if (rtn instanceof Variable){
-//                    // 变量沿用表达式的名字
-//                    variableMap.put((Variable) s, (Variable) rtn);
-//                }
             }
         }
         return super.visitVariableDeclarator(ast);
@@ -147,7 +134,11 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             // 函数声明结尾加上一条默认返回指令
             TACInstruction last = program.lastInstruction();
             if (last != null && last.getType() != TACType.RETURN) {
-                program.add(new TACInstruction(TACType.RETURN));
+                TACInstruction retTAC = new TACInstruction(TACType.RETURN);
+                if (function.isConstructor()) {
+                    retTAC.setArg1(function.getLocalVariables().get(0));
+                }
+                program.add(retTAC);
             }
         }
         return super.visitFunctionDeclaration(ast);
@@ -223,8 +214,15 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             } else { // 普通成员(属于对象)
                 Function function = at.enclosingFunctionOfNode(ast);
                 Variable thisV = variableMap.get(function.getVariables().get(0));
-                TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
-                program.add(fieldTAC);
+                if (!(ast.getParent() instanceof Expr) || !((Expr) ast.getParent()).isAssignExpr()) {
+                    TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
+                    program.add(fieldTAC);
+                    if (ast.getParent().getToken().isAssignOperator()) {
+                        tmpFieldData.offer((Variable) s);
+                    }
+                } else { // 成员直接赋值
+                    return s;
+                }
             }
         } else {
             if (!variableMap.containsKey(s)) {
@@ -272,11 +270,15 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 break;
             case ASSIGN:
                 result = (Variable) left;
-                instruction = new TACInstruction(TACType.ASSIGN, result, right, null, "=");
-                if (ast.expr(0) instanceof ArrayCall) {
-                    instruction.setArrayAssign(true);
-                    instruction.setArg2(instruction.getArg1());
-                    instruction.setArg1(tmpData.poll());
+                if (result.isClassMember()) {
+                    processClassMemberAssign(ast, result, (Symbol) right);
+                } else {
+                    instruction = new TACInstruction(TACType.ASSIGN, result, right, null, "=");
+                    if (tmpIdxData.size() > 0) {
+                        instruction.setArrayAssign(true);
+                        instruction.setArg2(instruction.getArg1());
+                        instruction.setArg1(tmpIdxData.poll());
+                    }
                 }
                 break;
             case ADD_ASSIGN:
@@ -333,19 +335,46 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
         } else {
             Variable variable = (Variable) at.symbolOfNode.get(ast);
+            if (ast.getParent() instanceof Expr
+                    && ((Expr)ast.getParent()).isAssignExpr()) { // xx.xx = xx
+                return variable;
+            }
             result = scope.createTempVariable(at.typeOfNode.get(ast));
+            if (ast.getParent().getToken().isAssignOperator()) {
+                tmpFieldData.offer(variable); // 处理xx.xx op= xx 表达式
+            }
             if (variable.isStatic()) {
                 TACInstruction staticFieldTAC = genGetStaticField((Variable) result, left, variable);
                 program.add(staticFieldTAC);
             } else {
-                if (!(variable instanceof Variable.This)
-                        && !(variable instanceof Variable.Super)) {
+                if (!(variable instanceof Variable.This) && !(variable instanceof Variable.Super)) {
                     TACInstruction fieldTAC = genGetField((Variable) result, left, variable);
                     program.add(fieldTAC);
                 }
             }
         }
         return result;
+    }
+
+    private void processClassMemberAssign(Expr ast, Symbol left, Symbol right) {
+        if (left.isStatic()) { // 静态成员赋值
+            Class theClass = (Class) left.getEnclosingScope();
+            TACInstruction staticFieldTAC = genPutStaticField(theClass, (Variable) left, right);
+            program.add(staticFieldTAC);
+        } else { // 普通成员赋值
+            Function function = at.enclosingFunctionOfNode(ast);
+            Variable thisV;
+            boolean isClassVirtualMethod = !function.isStatic() &&
+                    function.getEnclosingScope() == at.enclosingClassOfNode(left.getAstNode());
+            if (!isClassVirtualMethod) { // obj.xx = xx
+                Variable objVar = (Variable) at.symbolOfNode.get(ast.leftChild().leftChild());
+                thisV = variableMap.get(objVar);
+            } else { // this.xx = xx
+                thisV = variableMap.get(function.getVariables().get(0));
+            }
+            TACInstruction fieldTAC = genPutField(thisV, left, right);
+            program.add(fieldTAC);
+        }
     }
 
     @Override
@@ -480,9 +509,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             if (i == len - 1) {
                 ASTNode parent = ast.getParent();
                 // 数组调用赋值表达式的左孩子 表示是数组赋值
-                if (parent instanceof Expr && parent.firstChild() == ast &&
-                        parent.getToken().isAssignOperator()) {
-                    tmpData.offer(idx);
+                boolean isAssign = parent instanceof Expr && parent.firstChild() == ast &&
+                        parent.getToken().isAssignOperator();
+                boolean isDotAssign = parent instanceof Expr && ((Expr) parent).isDotExpr()
+                        && parent.getParent().getToken().isAssignOperator();
+                if (isAssign || isDotAssign) {
+                    tmpIdxData.offer(idx);
                     return arrayV;
                 }
             }
@@ -699,26 +731,31 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         gotoTAC.setArg1(endLabel);
     }
 
-    private TACInstruction processOpAssign(Expr ast, Object left, Object right,
-                                           String op) {
+    private TACInstruction processOpAssign(Expr ast, Object left,
+                                           Object right, String op) {
         Scope scope = getScope(ast);
         Type expectedType = at.typeOfNode.get(ast);
         Object lastLeft = left;
-        if (ast.expr(0) instanceof ArrayCall) {
+        if (tmpIdxData.size() > 0) {
             Variable result = scope.createTempVariable(expectedType);
             TACInstruction tac = new TACInstruction(TACType.ASSIGN,
-                    result, left, tmpData.peek(), null);
+                    result, left, tmpIdxData.peek(), null);
             program.add(tac);
             left = result;
         }
         Variable tmpResult = scope.createTempVariable(expectedType);
         TACInstruction instruction = new TACInstruction(TACType.ASSIGN, tmpResult, left, right, op);
         program.add(instruction);
-        if (ast.expr(0) instanceof ArrayCall) {
-            instruction = new TACInstruction(TACType.ASSIGN, (Variable) lastLeft, tmpData.poll(), tmpResult, "=");
+        if (tmpIdxData.size() > 0) {
+            instruction = new TACInstruction(TACType.ASSIGN, (Variable) lastLeft, tmpIdxData.poll(), tmpResult, "=");
             instruction.setArrayAssign(true);
         } else {
-            instruction = new TACInstruction(TACType.ASSIGN, (Variable) left, tmpResult, null, "=");
+            if (tmpFieldData.size() > 0) {
+                processClassMemberAssign(ast, Objects.requireNonNull(tmpFieldData.poll()), tmpResult);
+                return null;
+            } else {
+                instruction = new TACInstruction(TACType.ASSIGN, (Variable) left, tmpResult, null, "=");
+            }
         }
         return instruction;
     }
@@ -779,8 +816,16 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return new TACInstruction(TACType.GET_FIELD, result, arg1, arg2, null);
     }
 
-    private TACInstruction genGetStaticField(Variable result, Object arg1, Object arg2) {
-        return new TACInstruction(TACType.GET_STATIC_FIELD, result, arg1, arg2, null);
+    private TACInstruction genPutField(Variable ref, Object field, Object val) {
+        return new TACInstruction(TACType.PUT_FIELD, ref, field, val, null);
+    }
+
+    private TACInstruction genGetStaticField(Variable variable, Object arg1, Object arg2) {
+        return new TACInstruction(TACType.GET_STATIC_FIELD, variable, arg1, arg2, null);
+    }
+
+    private TACInstruction genPutStaticField(Object clazz, Variable field, Object val) {
+        return new TACInstruction(TACType.PUT_STATIC_FIELD, (Variable) val, clazz, field, null);
     }
 
     private TACInstruction genPrint() {

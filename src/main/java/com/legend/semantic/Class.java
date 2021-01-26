@@ -6,6 +6,7 @@ import com.legend.semantic.Variable.Super;
 import com.legend.semantic.Variable.This;
 import com.legend.vm.Object;
 
+import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -21,6 +22,7 @@ public class Class extends Scope implements Type {
     private Super superRef = null;
     // 静态符号表 存储类的静态成员 以及 静态方法
     private List<Symbol> staticSymbolTable = new ArrayList<>();
+    private List<Variable> fields;
 
     private DefaultConstructor defaultConstructor;
 
@@ -47,6 +49,26 @@ public class Class extends Scope implements Type {
         Class clazz = new Class(name, null);
         clazz.setParentClass(rootClass);
         return clazz;
+    }
+
+    public List<Variable> fields() {
+        return fields;
+    }
+
+    public void calculateFields() {
+        if (fields != null) return;
+        fields = new ArrayList<>();
+        int i = 0;
+        if (parentClass != null) {
+            parentClass.calculateFields();
+            i = parentClass.fields.size();
+        }
+        for (Symbol symbol : symbols) {
+            if (symbol instanceof Variable && !symbol.isStatic()) {
+                symbol.setOffset(i++);
+                fields.add((Variable) symbol);
+            }
+        }
     }
 
     public This getThis() {
@@ -120,6 +142,11 @@ public class Class extends Scope implements Type {
             function = getParentClass().findStaticMethod(name, paramTypes);
         }
         return function;
+    }
+
+    public Variable findField(String name) {
+
+        return getVariable(name);
     }
 
     // 查找构造函数
@@ -200,6 +227,9 @@ public class Class extends Scope implements Type {
     }
 
     public Object newObj() {
+        if (fields == null) {
+            calculateFields();
+        }
         return new Object(this);
     }
 
@@ -215,7 +245,7 @@ public class Class extends Scope implements Type {
             case "Float[":
                 return new Object(this, new float[count]);
             case "Boolean[":
-                return new Object(this, new boolean[count]);
+                return new Object(this, new int[count]);
             default:
                 return new Object(this, new Object[count]);
         }

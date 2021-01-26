@@ -142,6 +142,11 @@ public class Expr extends ASTNode {
         return token.getText().equals(".");
     }
 
+    public boolean isAssignExpr() {
+        if (token == null) return false;
+        return token.getText().equals("=");
+    }
+
     public Expr expr(int idx) {
         return getASTNode(Expr.class, idx);
     }

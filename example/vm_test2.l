@@ -8,6 +8,9 @@ for (int i = 0;i < arr.length;i+=1) {
         println(arr[i][j])
     }
 }
+boolean[] flags = boolean[3]
+flags[0] = true
+println(flags[0])
 //arr[0][1] = "jjj"
 //println(arr.length)
 //string[] arr1 = arr[1]

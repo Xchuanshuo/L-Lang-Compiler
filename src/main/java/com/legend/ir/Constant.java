@@ -31,7 +31,7 @@ public class Constant extends Symbol {
     }
 
     public String getStrVal() {
-        return (String) value;
+        return String.valueOf(value);
     }
 
     public Type getType() {

@@ -61,6 +61,8 @@ public class Constant {
     public static final byte NEW_INSTANCE = 0x60;
     public static final byte GET_FIELD = 0x61;
     public static final byte GET_S_FIELD = 0x62;
+    public static final byte PUT_FIELD = 0x63;
+    public static final byte PUT_S_FIELD = 0x65;
 
     // 函数调用相关
     public static final byte INVOKE_VIRTUAL = 0x70;

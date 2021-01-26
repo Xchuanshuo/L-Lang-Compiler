@@ -1,9 +1,16 @@
 string printHeart(string s, int e) {
+    string[] text = {'I', 'l', 'o', 'v', 'e', 'y', 'o', 'u'}
+    int i = 0
     for (float y = 1.5f; y > -1.5f; y -= 0.1f) {
         for (float x = -1.5f; x < 1.5f; x += 0.032f) {
             float a = x * x + y * y - 1
             boolean flag = a * a * a - x * x * y * y * y <= 0.0f
-            if (flag) print("*"); else print(" ");
+            if (flag) {
+                print(text[i%text.length])
+                i += 1
+            } else {
+                print(" ");
+            }
         }
         println()
     }

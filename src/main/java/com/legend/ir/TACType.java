@@ -34,7 +34,9 @@ public enum TACType {
     INVOKE_VIRTUAL,
     INVOKE_STATIC,
     GET_FIELD,
+    PUT_FIELD,
     GET_STATIC_FIELD,
+    PUT_STATIC_FIELD,
     NEW_ARRAY, // new_array type n
     ARRAY_LEN, // ARRAY_LEN arrObj
 }

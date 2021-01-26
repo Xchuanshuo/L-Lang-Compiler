@@ -72,6 +72,9 @@ public class TypeChecker extends BaseASTListener {
                 checkAssign(type1, type2, ast.getChild(0), ast.getChild(1), ast);
                 break;
             case ADD_ASSIGN:
+                checkAssign(type1, type2, ast.getChild(0), ast.getChild(1), ast);
+                typeImplicitCast(ast);
+                break;
             case SUB_ASSIGN:
             case MUL_ASSIGN:
             case DIV_ASSIGN:

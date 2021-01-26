@@ -2,7 +2,7 @@
 * 多维数组测试
 */
 int[][][] a = {{{1,2}, {2}, {3}}, {{5, 6, 7, 8}, {1,6}, {5,8},{1}}}
-println(a[0][1][1])
+println(a[1][1][1])
 //println(a.length < 1)
 println(a[0].length < 1)
 //println(a[0][0][1].length)

@@ -104,6 +104,11 @@ public class MethodArea {
         return constantPool.getByIdx(idx);
     }
 
+    public String getStrConstByIdx(int idx) {
+        Constant constant = getConstByIdx(idx);
+        return constant.getStrVal();
+    }
+
     public Constant getGlobalConst() {
         return globalConst;
     }
@@ -179,7 +184,9 @@ public class MethodArea {
             sb.append(type.toString()).append(",");
         }
         sb.append(")");
-        sb.append(function.returnType().toString());
+        if (!function.isConstructor()) {
+            sb.append(function.returnType().toString());
+        }
         return sb.toString();
     }
 

@@ -9,6 +9,7 @@ public class Object {
 
     public Object(Class clazz) {
         this.clazz = clazz;
+        this.data = new Slots(clazz.fields().size());
     }
 
     public Object(Class clazz,java.lang.Object data) {
@@ -42,6 +43,10 @@ public class Object {
 
     public Object[] objs() {
         return (Object[]) data;
+    }
+
+    public Slots fieldSlots() {
+        return (Slots) data;
     }
 
     public int arrayLength() {

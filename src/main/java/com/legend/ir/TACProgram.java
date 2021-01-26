@@ -118,6 +118,14 @@ public class TACProgram {
                 Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
                 area.addConstant(constant);
                 instruction.setArg2(constant);
+            } else if (instruction.getType() == TACType.PUT_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg1());
+                area.addConstant(constant);
+                instruction.setArg1(constant);
+            } else if (instruction.getType() == TACType.PUT_STATIC_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+                area.addConstant(constant);
+                instruction.setArg2(constant);
             }
         }
     }

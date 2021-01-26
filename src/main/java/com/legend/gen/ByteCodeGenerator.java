@@ -9,6 +9,7 @@ import com.legend.ir.TACInstruction;
 import com.legend.ir.TACProgram;
 import com.legend.ir.TACType;
 import com.legend.semantic.*;
+import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -75,6 +76,12 @@ public class ByteCodeGenerator {
                     break;
                 case GET_STATIC_FIELD:
                     genGetStaticField(tac);
+                    break;
+                case PUT_FIELD:
+                    genPutField(tac);
+                    break;
+                case PUT_STATIC_FIELD:
+                    genPutStaticField(tac);
                     break;
                 case ARG:
                     emitPush((Symbol) tac.getArg1());
@@ -230,6 +237,23 @@ public class ByteCodeGenerator {
         emitRet();
     }
 
+    private void genPutField(TACInstruction tac) {
+        Variable ref = tac.getResult();
+        Constant fieldConst = (Constant) tac.getArg1();
+        Symbol val = (Symbol) tac.getArg2();
+        emitLoad(val, Register.R1);
+        emitLoad(ref, Register.R2);
+        emitPutField(Register.R1, Register.R2, fieldConst);
+    }
+
+    private void genPutStaticField(TACInstruction tac) {
+        Variable val = tac.getResult();
+        Constant classConst = (Constant) tac.getArg1();
+        Constant fieldConst = (Constant) tac.getArg2();
+        emitLoad(val, Register.R1);
+        emitPutStaticField(Register.R1, classConst, fieldConst);
+    }
+
     private void genGetStaticField(TACInstruction tac) {
         Variable res = tac.getResult();
         // todo
@@ -305,7 +329,7 @@ public class ByteCodeGenerator {
         emitLoad(base, Register.R2);
         emitLoad(idx, Register.R3);
         Type type = ((ArrayType)base.getType()).baseType();
-        if (type == PrimitiveType.Integer) {
+        if (type == PrimitiveType.Integer | type == PrimitiveType.Boolean) {
             emitIAStore(Register.R1, Register.R2, Register.R3);
         } else if (type == PrimitiveType.Float) {
             emitFAStore(Register.R1, Register.R2, Register.R3);
@@ -321,7 +345,7 @@ public class ByteCodeGenerator {
         emitLoad(base, Register.R1);
         emitLoad(idx, Register.R2);
         Type type = ((ArrayType)base.getType()).baseType();
-        if (type == PrimitiveType.Integer) {
+        if (type == PrimitiveType.Integer | type == PrimitiveType.Boolean) {
             emitIALoad(Register.R1, Register.R2, Register.R3);
         } else if (type == PrimitiveType.Float) {
             emitFALoad(Register.R1, Register.R2, Register.R3);
@@ -713,6 +737,17 @@ public class ByteCodeGenerator {
         program.addIns(Instruction.offset3(OpCode.GET_S_FIELD,
                 new Offset(classConst.getOffset()),
                 new Offset(fieldConst.getOffset()), dest));
+    }
+
+    private void emitPutField(Register valR, Register objR, Constant fieldConst) {
+        program.addIns(Instruction.offset2(OpCode.PUT_FIELD, valR, objR,
+                new Offset(fieldConst.getOffset())));
+    }
+
+    private void emitPutStaticField(Register valR, Constant classConst, Constant fieldConst) {
+        program.addIns(Instruction.offset4(OpCode.PUT_S_FIELD, valR,
+                new Offset(classConst.getOffset()),
+                new Offset(fieldConst.getOffset())));
     }
 
     private void emitInvokeVirtual(Register obj, Constant methodIdx) {

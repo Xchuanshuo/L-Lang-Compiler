@@ -10,6 +10,7 @@ import com.legend.gen.operand.Register;
 import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Type;
+import com.legend.semantic.Variable;
 
 import java.util.Stack;
 
@@ -58,10 +59,10 @@ public class LVM {
             Instruction ins = Instruction.decode(reader);
             int step = ins.getOpCode().getAddressingType().getBytes() + 1;
             registers.setInt(Register.PC, registers.getInt(Register.PC) + step);
-            exec(ins);
             if (isDebug) {
                 System.out.println(ins.toString());
             }
+            exec(ins);
 //            try {
 //                Thread.sleep(500);
 //            } catch (InterruptedException e) {
@@ -222,9 +223,25 @@ public class LVM {
             case AA_STORE:
                 aastore(ins);
                 break;
+            case NEW_INSTANCE:
+                newInstance(ins);
+                break;
+            case GET_FIELD:
+                getField(ins);
+                break;
+            case GET_S_FIELD:
+                getStaticField(ins);
+                break;
+            case PUT_FIELD:
+                putField(ins);
+                break;
+//            case PUT_S_FIELD:
+//                break;
             case INVOKE_VIRTUAL:
+                invokeVirtual(ins);
                 break;
             case INVOKE_SPECIAL:
+                invokeSpecial(ins);
                 break;
             case INVOKE_STATIC:
                 invokeStatic(ins);
@@ -470,19 +487,18 @@ public class LVM {
         if (r1 == Register.CONSTANT) {
             com.legend.ir.Constant cst = area.getConstByIdx(offset.getOffset());
             if (cst.getType() == PrimitiveType.Integer) {
-                registers.setInt(r3.getIdx(), cst.getIntVal());
+                registers.setInt(r3, cst.getIntVal());
             } else if (cst.getType() == PrimitiveType.Float) {
-                registers.setFloat(r3.getIdx(), cst.getFloatVal());
+                registers.setFloat(r3, cst.getFloatVal());
             } else if (cst.getType() == PrimitiveType.String) {
-                registers.setRef(r3.getIdx(), StringPool.getStrObj(cst.getStrVal()));
+                registers.setRef(r3, StringPool.getStrObj(cst.getStrVal()));
             }
         } else {
-            int address = registers.getInt(r1.getIdx()) + offset.getOffset();
-            val = stackMemory.getRef(address);
-            if (val != null) {
-                registers.setRef(r3.getIdx(), val);
+            int address = registers.getInt(r1) + offset.getOffset();
+            if (stackMemory.isRef(address)) {
+                registers.setRef(r3, stackMemory.getRef(address));
             } else {
-                registers.setInt(r3.getIdx(), stackMemory.getInt(address));
+                registers.setInt(r3, stackMemory.getInt(address));
             }
         }
     }
@@ -645,6 +661,69 @@ public class LVM {
         Object val = registers.getRef(r1);
         Object[] objs = registers.getRef(r2).objs();
         objs[registers.getInt(r3)] = val;
+    }
+
+    private void newInstance(Instruction ins) {
+        Offset offset = ins.getOffsetOperand(1);
+        Register resultR = ins.getRegOperand(2);
+        Class clazz = area.getClassByIdx(offset.getOffset());
+        Object ref = clazz.newObj();
+        registers.setRef(resultR, ref);
+    }
+
+    private void getField(Instruction ins) {
+        Register refR = ins.getRegOperand(0);
+        Offset offset = ins.getOffsetOperand(1);
+        Register resultR = ins.getRegOperand(2);
+        Object ref = registers.getRef(refR);
+        String name = area.getStrConstByIdx(offset.getOffset());
+        Variable variable = ref.clazz().findField(name);
+        int id = variable.getOffset();
+        Slots fieldSlots = ref.fieldSlots();
+        Type type = variable.getType();
+        if (type == PrimitiveType.Byte || type == PrimitiveType.Integer
+                || type == PrimitiveType.Boolean) {
+            registers.setInt(resultR, fieldSlots.getInt(id));
+        } else if (type == PrimitiveType.Float) {
+            registers.setFloat(resultR, fieldSlots.getFloat(id));
+        } else {
+            registers.setRef(resultR, fieldSlots.getRef(id));
+        }
+    }
+
+    private void getStaticField(Instruction ins) {
+
+    }
+
+    private void putField(Instruction ins) {
+        Register valR = ins.getRegOperand(0);
+        Object ref = registers.getRef(ins.getRegOperand(1));
+        String name = area.getStrConstByIdx(ins.getOffsetOperand(2).getOffset());
+        Variable field = ref.clazz().findField(name);
+        int id = field.getOffset();
+        Type type = field.getType();
+        if (type == PrimitiveType.Integer || type == PrimitiveType.Boolean
+                || type == PrimitiveType.Byte) {
+            ref.fieldSlots().setInt(id, registers.getInt(valR));
+        } else if (type == PrimitiveType.Float) {
+            ref.fieldSlots().setFloat(id, registers.getFloat(valR));
+        } else {
+            ref.fieldSlots().setRef(id, registers.getRef(valR));
+        }
+    }
+
+    private void invokeVirtual(Instruction ins) {
+        Offset offset = ins.getOffsetOperand(2);
+        int methodPos = area.getFuncPosByIdx(offset.getOffset());
+        retAddressStack.push(registers.getInt(Register.PC));
+        registers.setInt(Register.PC, methodPos);
+    }
+
+    private void invokeSpecial(Instruction ins) {
+        Offset offset = ins.getOffsetOperand(2);
+        int methodPos = area.getFuncPosByIdx(offset.getOffset());
+        retAddressStack.push(registers.getInt(Register.PC));
+        registers.setInt(Register.PC, methodPos);
     }
 
     private void invokeStatic(Instruction ins) {
