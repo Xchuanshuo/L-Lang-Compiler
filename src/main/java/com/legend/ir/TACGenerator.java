@@ -182,7 +182,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             symbol = visitArrayCall((ArrayCall) ast);
         } else if (ast instanceof TerminalNode) {
             Symbol s = at.symbolOfNode.get(ast);
-            if (s instanceof Variable.This) {
+            if (s instanceof Variable.This || s instanceof Variable.Super) {
                 Function function = at.enclosingFunctionOfNode(ast);
                 variableMap.put((Variable) s, variableMap.get(function.getVariables().get(0)));
             }
@@ -209,7 +209,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private Symbol processVariable(Expr ast, Symbol s) {
         Symbol symbol = null;
-        if (!(s instanceof Variable.This) && ((Variable) s).isClassMember()) { // 类成员
+        if (!(s instanceof Variable.This) && !(s instanceof Variable.Super)
+                &&((Variable) s).isClassMember()) { // 类成员
             symbol = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
             if (s.isStatic()) { // 静态成员(属于类)
                 Class theClass = (Class) s.getEnclosingScope();
@@ -332,7 +333,9 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
             List<Symbol> args = getArgsSymbol(functionCall);
             Function function = (Function) at.symbolOfNode.get(functionCall);
-            if (left instanceof Variable) { // 对象实例方法
+            if (ast.SUPER() !=null) {
+                result = translateSuperFunCall(scope, function, args);
+            } else if (left instanceof Variable) { // 对象实例方法
                 result = translateVirtualMethod(scope, (Variable) left, function, args);
             } else if (left instanceof Class){ // 类(静态)方法
                 result = translateStaticFunction(scope, (Class) left, function, args);
@@ -400,9 +403,10 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             // 内置函数
             return translateBuiltInFunction(ast);
         }
-//        System.out.println(scope + "---------------------------------");
         List<Symbol> args = getArgsSymbol(ast);
-        if (function.isConstructor()) { // 类构造方法
+        if (ast.SUPER() != null) {
+            return translateSuperFunCall(scope, function, args);
+        } else if (ast.THIS() == null && function.isConstructor()) { // 类构造方法
             return translateConstructor(scope, function, args);
         } else if (!function.isStatic() && function.isMethod()) {
             // this隐式调用 位于对象的实例方法内部可以省略this关键字
@@ -433,6 +437,20 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             TACInstruction invokeSpecialTAC = genInvokeSpecial(result, result, function);
             program.add(invokeSpecialTAC);
         }
+        return result;
+    }
+
+    private Symbol translateSuperFunCall(Scope scope, Function function, List<Symbol> args) {
+        Variable classObj = variableMap.get(function.getVariables().get(0));
+        args.add(0, classObj);
+        for (int i = args.size() - 1;i >= 0;i--) {
+            Symbol symbol = args.get(i);
+            TACInstruction argTAC = genArg(symbol);
+            program.add(argTAC);
+        }
+        Variable result = scope.createTempVariable(classObj.getType());
+        TACInstruction invokeSpecialTAC = genInvokeSpecial(result, classObj, function);
+        program.add(invokeSpecialTAC);
         return result;
     }
 

@@ -56,7 +56,7 @@ public class Variable extends Symbol {
     public static class Super extends Variable {
 
         public Super(Scope enclosingScope, ASTNode astNode) {
-            super("this", enclosingScope, astNode);
+            super("super", enclosingScope, astNode);
         }
 
         public Class Class() {

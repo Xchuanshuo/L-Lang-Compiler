@@ -181,6 +181,16 @@ public class MetadataArea {
         throw new LVMException("No exist a function : " + newFuncName);
     }
 
+    public int getSpecialFuncPosByIdx(int idx) {
+        // String className = clazz.toString().replace("null_", "");
+        Function function = getFunctionByIdx(idx);
+        String newFuncName = getFunctionSignature(function);
+        if (funcNameToPositionMap.containsKey(newFuncName)) {
+            return funcNameToPositionMap.get(newFuncName);
+        }
+        throw new LVMException("No exist a function : " + newFuncName);
+    }
+
     public int getFuncPosByIdx(int idx) {
         Function function = getFunctionByIdx(idx);
         String signature = getFunctionSignature(function);

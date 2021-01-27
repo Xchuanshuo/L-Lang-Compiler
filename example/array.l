@@ -140,7 +140,7 @@ Sort quickSort = QuickSort();
 Sort mergeSort = MergeSort();
 Sort selectionSort = SelectionSort();
 
-sort(mergeSort, a);
+sort(quickSort, a);
 
 println("排序后:");
 printArr(a);
