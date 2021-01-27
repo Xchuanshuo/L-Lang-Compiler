@@ -1,5 +1,4 @@
 int[] a = {1, 2, 10, 8, 7, 6, 3, 20, 5};
-
 void printHeart() {
     for (float y = 1.5f; y > -1.5f; y = y - 0.1f) {
         for (float x = -1.5f; x < 1.5f; x = x + 0.05f) {
@@ -10,9 +9,8 @@ void printHeart() {
         println();
     }
 }
-printHeart();
 
-void printArr() {
+void printArr(int[] a) {
     for (int i = 0;i < a.length;i+=1) {
         print(a[i] + " ");
     }
@@ -34,7 +32,6 @@ class Sort {
 }
 
 class QuickSort extends Sort {
-    int a;
 
     void sort(int[] a) {
       quickSort(a, 0, a.length - 1);
@@ -48,15 +45,15 @@ class QuickSort extends Sort {
     }
 
     int partition(int[] a, int l, int r) {
-        int t = a[l], i = l, j = r + 1;
-        while (true) {
-            while (a[i+=1] < t && i != r);
-            while (a[j-=1] > t && j != l);
-            if (i >= j) break
+        int v = a[l], i = l, j = r+1;
+        while (i < j) {
+            while(a[i+=1] < v && i != r);
+            while(a[j-=1] > v && j != l);
+            if (i >= j) break;
             swap(a, i, j);
         }
-        swap(a, l, j);
-        return j;
+        swap(a, l, j)
+        return j
     }
 
     string name() {
@@ -138,7 +135,7 @@ void sort(Sort sort, int[] array) {
 }
 
 println("原数组: ");
-printArr();
+printArr(a);
 Sort quickSort = QuickSort();
 Sort mergeSort = MergeSort();
 Sort selectionSort = SelectionSort();
@@ -146,8 +143,7 @@ Sort selectionSort = SelectionSort();
 sort(mergeSort, a);
 
 println("排序后:");
-printArr();
-
+printArr(a);
 
 //class A {
 //    class B {

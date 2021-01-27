@@ -413,7 +413,7 @@ public class ByteCodeGenerator {
                 emitCmpNE(getType(arg1, arg2), r1, r2, r3);
                 break;
             case "&&":
-                emitIcmpAnd(r1, r3, r3);
+                emitIcmpAnd(r1, r2, r3);
                 break;
             case "||":
                 emitIcmpOr(r1, r2, r3);

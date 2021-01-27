@@ -6,6 +6,7 @@ import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
 import com.legend.gen.ByteCodeGenerator;
 import com.legend.gen.ByteCodeProgram;
+import com.legend.interpreter.LInterpreter;
 import com.legend.ir.TACGenerator;
 import com.legend.ir.TACProgram;
 import com.legend.parser.Parser;
@@ -26,7 +27,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException, GeneratorException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/this-and-super.l";
+                "L-Lang-Compiler/example/array.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -64,8 +65,8 @@ public class Compiler {
         analyzer.analyzeClosure();
 
         // AST解释器
-//        LInterpreter interpreter = new LInterpreter(at);
-//        program.accept(interpreter);
+        LInterpreter interpreter = new LInterpreter(at);
+        program.accept(interpreter);
         TACProgram tacProgram = new TACProgram();
         // 生成三地址码
         TACGenerator irGenerator = new TACGenerator(at, tacProgram);

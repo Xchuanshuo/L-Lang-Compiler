@@ -143,6 +143,7 @@ public class LVM {
                 break;
             case ICMP_NE:
                 icmpNE(ins);
+                break;
             case FCMP_LT:
                 fcmpLT(ins);
                 break;
@@ -474,17 +475,17 @@ public class LVM {
     }
 
     private void cmpAnd(Instruction ins) {
-        int val1 = registers.getInt(ins.getRegOperand(0));
-        int val2 = registers.getInt(ins.getRegOperand(1));
+        boolean val1 = registers.getBoolean(ins.getRegOperand(0));
+        boolean val2 = registers.getBoolean(ins.getRegOperand(1));
         Register r3 = ins.getRegOperand(2);
-        registers.setBoolean(r3, (val1 & val2) == 1);
+        registers.setBoolean(r3, val1 && val2);
     }
 
     private void cmpOr(Instruction ins) {
-        int val1 = registers.getInt(ins.getRegOperand(0));
-        int val2 = registers.getInt(ins.getRegOperand(1));
+        boolean val1 = registers.getBoolean(ins.getRegOperand(0));
+        boolean val2 = registers.getBoolean(ins.getRegOperand(1));
         Register r3 = ins.getRegOperand(2);
-        registers.setBoolean(r3, (val1 | val2) == 1);
+        registers.setBoolean(r3, val1 || val2);
     }
 
     private void load(Instruction ins) {
