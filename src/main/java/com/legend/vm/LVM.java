@@ -751,18 +751,16 @@ public class LVM {
     }
 
     private void invokeVirtual(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Object ref = registers.getRef(r1);
         Offset offset = ins.getOffsetOperand(2);
-        int methodPos = area.getFuncPosByIdx(offset.getOffset());
+        int methodPos = area.getFuncPosByIdx(ref.clazz(), offset.getOffset());
         retAddressStack.push(registers.getInt(Register.PC));
         registers.setInt(Register.PC, methodPos);
     }
 
     private void invokeSpecial(Instruction ins) {
-        Offset offset = ins.getOffsetOperand(2);
-        Function t = area.getFunctionByIdx(offset.getOffset());
-        int methodPos = area.getFuncPosByIdx(offset.getOffset());
-        retAddressStack.push(registers.getInt(Register.PC));
-        registers.setInt(Register.PC, methodPos);
+        invokeVirtual(ins);
     }
 
     private void invokeStatic(Instruction ins) {

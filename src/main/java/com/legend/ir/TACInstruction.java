@@ -102,7 +102,7 @@ public class TACInstruction {
             case LABEL:
                 return String.format("%s:", arg1);
             case ENTRY:
-                return "Entry:";
+                return String.format("Entry: sz(%s)", arg1);
             case RETURN:
                 return String.format("RETURN %s", arg1 == null ? "" : arg1);
             case ARG:

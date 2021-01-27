@@ -15,7 +15,7 @@ public enum TACType {
     ARG, // arg 1(实参)
     PARAM, // param 1(形参)
     RETURN, // return (expr)
-    ENTRY, // entry 程序入口位置
+    ENTRY, // entry localSize(启动时分配栈的大小) 程序入口
 
     // 内置函数
     INPUT,

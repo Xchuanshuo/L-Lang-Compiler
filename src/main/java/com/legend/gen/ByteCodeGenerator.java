@@ -40,6 +40,7 @@ public class ByteCodeGenerator {
                 case ENTRY:
                     program.setEntry(program.getCurPosition());
                     emitNop();
+                    emitDec(Register.SP, (Integer) tac.getArg1());
                     break;
                 case LABEL:
                     Function function = tacProgram.getFunction(tac);

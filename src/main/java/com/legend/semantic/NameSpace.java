@@ -36,6 +36,14 @@ public class NameSpace extends BlockScope {
         subNameSpaces.add(child);
     }
 
+    public int getAllSubModuleLocalsSize() {
+        int size = 0;
+        for (NameSpace space : subNameSpaces) {
+            size += space.getLocalsSize();
+        }
+        return size;
+    }
+
     public void removeSubNameSpace(NameSpace child) {
         child.parent = null;
         subNameSpaces.remove(child);

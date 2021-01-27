@@ -1,5 +1,6 @@
 package com.legend.common;
 
+import com.legend.exception.LVMException;
 import com.legend.gen.GlobalConstantPool;
 import com.legend.gen.Instruction;
 import com.legend.ir.Constant;
@@ -59,8 +60,7 @@ public class MetadataArea {
             throw new RuntimeException("No exist a class name of " + className);
         }
         if (!staticFieldSlotsMap.containsKey(className)) {
-            List<Variable> variables = theClass.getStaticFields();
-            Slots slots = new Slots(variables.size());
+            Slots slots = new Slots(theClass.getStaticFieldCount());
             staticFieldSlotsMap.put(className, slots);
         }
         return staticFieldSlotsMap.get(className);
@@ -165,6 +165,20 @@ public class MetadataArea {
     public void addFunction(Constant signature, int position) {
         addConstant(signature);
         funcNameToPositionMap.put(String.valueOf(signature.getValue()), position);
+    }
+
+    public int getFuncPosByIdx(Class clazz, int idx) {
+        String className = clazz.toString().replace("null_", "");
+        Function function = getFunctionByIdx(idx);
+        String signature = getFunctionSignature(function);
+        String newFuncName = className + signature.substring(
+                signature.lastIndexOf("_"), signature.length());
+        if (funcNameToPositionMap.containsKey(newFuncName)) {
+            return funcNameToPositionMap.get(newFuncName);
+        } else if (clazz.getParentClass() != null) {
+            return getFuncPosByIdx(clazz.getParentClass(), idx);
+        }
+        throw new LVMException("No exist a function : " + newFuncName);
     }
 
     public int getFuncPosByIdx(int idx) {

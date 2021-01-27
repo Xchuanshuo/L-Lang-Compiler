@@ -1,5 +1,5 @@
 /**
- * closure.play
+ * closure.l
  * 测试闭包特性
  */
 
@@ -18,11 +18,11 @@ function int() fun1(){
 }
 
 function int() fun2 = fun1();
-for (int i = 0; i< 3; i++){
+for (int i = 0; i< 3; i+=1){
     println("b = " + fun2() + ", a = "+a);
 }
 
 function int() fun3 = fun1();  
-for (int i = 0; i< 3; i++){
+for (int i = 0; i< 3; i+=1){
     println("b = " + fun3() + ", a = "+a);
 }

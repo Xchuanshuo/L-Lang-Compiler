@@ -1,5 +1,5 @@
 /**
-this-and-super.play 面向对象的this和super特性。
+this-and-super.l 面向对象的this和super特性。
 */
 class Mammal{
     int weight;
@@ -30,12 +30,11 @@ class Cow extends Mammal{
 
     void speak(){
         println("in Cow.speak");
-
         println("super.weight : "  + super.weight);
         println("this.weight : "  + this.weight);
 
         println("call super.speak() : " );
-        super.speak();
+//        super.speak();
 
         println("Cow speak is : moo~~ moo~~");
     }

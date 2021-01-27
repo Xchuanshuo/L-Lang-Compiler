@@ -9,7 +9,7 @@ public class Object {
 
     public Object(Class clazz) {
         this.clazz = clazz;
-        this.data = new Slots(clazz.fields().size());
+        this.data = new Slots(clazz.getFieldCount());
     }
 
     public Object(Class clazz,java.lang.Object data) {
@@ -66,6 +66,6 @@ public class Object {
 
     @Override
     public String toString() {
-        return String.valueOf(data);
+        return String.valueOf(data).replace("Slots", clazz.getName());
     }
 }

@@ -17,7 +17,7 @@ class Mammal{
   }
 }
 
-Mammal mammal = Mammal("dog");           //playscript特别的构造方法，不需要用new关键字。
+Mammal mammal = Mammal("dog");
 mammal.speak();                          //访问对象方法
 println("mammal.name = " + mammal.name); //访问对象的属性
 
@@ -25,6 +25,10 @@ println("mammal.name = " + mammal.name); //访问对象的属性
 //没有构造方法，创建的时候用缺省构造方法
 class Bird{
   int speed = 50;    //在缺省构造方法里初始化
+
+  Bird() {
+    this.speed = 50
+  }
 
   void fly(){
     println("bird flying...");

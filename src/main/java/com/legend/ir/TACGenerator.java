@@ -45,8 +45,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 visitFunctionDeclaration(fd);
             }
         }
-        addEntry();
+        TACInstruction entryTAC = genEntry();
+        program.add(entryTAC);
         visitBlockStatements(ast.blockStatements());
+        // 回填全局变量占用存储空间
+        NameSpace main = (NameSpace) getScope(ast);
+        entryTAC.setArg1(main.getAllSubModuleLocalsSize());
         return program;
     }
 
@@ -795,8 +799,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return new TACInstruction(TACType.NEW_INSTANCE, result, theClass, null, null);
     }
 
-    private void addEntry() { // 函数调用开始
-        program.add(new TACInstruction(TACType.ENTRY));
+    private TACInstruction genEntry() {
+        return new TACInstruction(TACType.ENTRY);
     }
 
     private TACInstruction genArg(Symbol arg) {

@@ -21,6 +21,8 @@ public class Class extends Scope implements Type {
     private Super superRef = null;
     // 静态符号表 存储类的静态成员以及静态方法
     private List<Symbol> staticSymbolTable = new ArrayList<>();
+    private int fieldCount = 0;
+    private int staticFieldCount = 0;
     private List<Variable> fields;
     private List<Variable> staticFields;
 
@@ -66,13 +68,12 @@ public class Class extends Scope implements Type {
     public void calculateStaticFields() {
         if (staticFields != null) return;
         staticFields = new ArrayList<>();
-        int i = 0;
         if (parentClass != null) {
-            i = parentClass.getStaticFields().size();
+            staticFieldCount = parentClass.staticFieldCount;
         }
         for (Symbol symbol : staticSymbolTable) {
             if (symbol instanceof Variable) {
-                symbol.setOffset(i++);
+                symbol.setOffset(staticFieldCount++);
                 staticFields.add((Variable) symbol);
             }
         }
@@ -81,14 +82,13 @@ public class Class extends Scope implements Type {
     public void calculateFields() {
         if (fields != null) return;
         fields = new ArrayList<>();
-        int i = 0;
         if (parentClass != null) {
             parentClass.calculateFields();
-            i = parentClass.fields.size();
+            fieldCount = parentClass.fieldCount;
         }
         for (Symbol symbol : symbols) {
             if (symbol instanceof Variable && !symbol.isStatic()) {
-                symbol.setOffset(i++);
+                symbol.setOffset(fieldCount++);
                 fields.add((Variable) symbol);
             }
         }
@@ -246,6 +246,14 @@ public class Class extends Scope implements Type {
             return MetadataArea.getInstance().loadArrayClass(componentName);
         }
         return null;
+    }
+
+    public int getFieldCount() {
+        return fieldCount;
+    }
+
+    public int getStaticFieldCount() {
+        return staticFieldCount;
     }
 
     public Object newObj() {
