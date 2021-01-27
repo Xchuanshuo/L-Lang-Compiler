@@ -1,5 +1,6 @@
 package com.legend.compiler;
 
+import com.legend.common.MetadataArea;
 import com.legend.exception.GeneratorException;
 import com.legend.exception.LexicalException;
 import com.legend.exception.ParseException;
@@ -25,7 +26,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException, GeneratorException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/vm_test3.l";
+                "L-Lang-Compiler/example/vm_test4.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
@@ -69,17 +70,16 @@ public class Compiler {
         // 生成三地址码
         TACGenerator irGenerator = new TACGenerator(at, tacProgram);
         program.accept(irGenerator);
-        tacProgram.fillConstantPool();
+        MetadataArea.getInstance().fillConstantPool(tacProgram.getInstructionList());
 
         tacProgram.dump();
-        tacProgram.dumpConstantPool();
-
 
         // 生成 bytecode
         ByteCodeGenerator codeGenerator = new ByteCodeGenerator(tacProgram);
         codeGenerator.generate();
         ByteCodeProgram byteCodeProgram = codeGenerator.getProgram();
 
+        MetadataArea.getInstance().dumpConstantPool();
         byteCodeProgram.dumpWithComments();
 
         // 虚拟机解释执行

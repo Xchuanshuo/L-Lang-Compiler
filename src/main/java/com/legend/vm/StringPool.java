@@ -1,6 +1,6 @@
 package com.legend.vm;
 
-import com.legend.gen.MethodArea;
+import com.legend.common.MetadataArea;
 import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 
@@ -12,7 +12,7 @@ import com.legend.semantic.PrimitiveType;
 public class StringPool {
 
     public static Object getStrObj(String value) {
-        Class clazz = (Class) MethodArea.getInstance().
+        Class clazz = (Class) MetadataArea.getInstance().
                 getTypeByName(PrimitiveType.String.name());
         Object strObj = clazz.newObj();
         strObj.setData(value);

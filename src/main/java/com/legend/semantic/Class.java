@@ -1,12 +1,11 @@
 package com.legend.semantic;
 
-import com.legend.gen.MethodArea;
+import com.legend.common.MetadataArea;
 import com.legend.parser.ast.ASTNode;
 import com.legend.semantic.Variable.Super;
 import com.legend.semantic.Variable.This;
 import com.legend.vm.Object;
 
-import java.lang.reflect.Field;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -244,7 +243,7 @@ public class Class extends Scope implements Type {
     public Class getComponentClass() {
         if (isArray()) {
             String componentName = name.substring(0, name.length() - 1);
-            return MethodArea.getInstance().loadArrayClass(componentName);
+            return MetadataArea.getInstance().loadArrayClass(componentName);
         }
         return null;
     }

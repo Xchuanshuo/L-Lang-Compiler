@@ -66,22 +66,26 @@ Student test1() {
     return Student('123', 20)
 }
 
-//Student s = Student('111', 18)
-//Student.age = 11
-//Student.takeClass().test('测试1111').stuNumber = '10'
-//Student.takeClass()
-//Student[] students = Student[10]
-////Student s1 = s.test('测试1')
-//Student s1 = students[0]
-//s1.test('测试1').test('测试2').test('测试3').stuNumber = '1000'
-//int[][] a = {{1, 2, 2}, {888, 0x11}}
-//println(a[1].length)
-//string[][][] a1 = string[1][2][3]
-//println(a1[1][1].length)
-//
-//Student newS = test1().test('测试静态1').test("测试静态2")
-//newS.stuNumber = '999'
-//Student.age = 90
-Student student = Student.builder()
-        .name("小明").sex(1).stuNumber('10001').build()
-println(student.name)
+void main() {
+    Student s = Student('111', 18)
+    Student.age = 11
+    println(Student.age)
+    Student.takeClass().test('测试1111').stuNumber = '10'
+    Student[] students = Student[10]
+    students[0] = s.test('测试1')
+    Student s1 = students[0]
+    s1.test('测试1').test('测试2').test('测试3').stuNumber = '1000'
+    int[][] a = {{1, 2, 2}, {888, 0x11}}
+    println(a[1].length)
+    string[][][] a1 = string[1][2][3]
+    println(a1[0][1].length)
+
+    Student newS = test1().test('测试静态1').test("测试静态2")
+    newS.stuNumber = '999'
+    Student student = Student.builder()
+            .name("小明").sex(1).stuNumber('10001').build()
+    println(student.name)
+    println(student.stuNumber)
+}
+
+main()

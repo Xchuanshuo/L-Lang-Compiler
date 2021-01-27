@@ -1,5 +1,6 @@
 package com.legend.gen;
 
+import com.legend.common.MetadataArea;
 import com.legend.gen.operand.ImmediateNumber;
 import com.legend.gen.operand.Label;
 import com.legend.gen.operand.Offset;
@@ -9,7 +10,6 @@ import com.legend.ir.TACInstruction;
 import com.legend.ir.TACProgram;
 import com.legend.ir.TACType;
 import com.legend.semantic.*;
-import jdk.nashorn.internal.runtime.regexp.joni.constants.OPCode;
 
 import java.util.HashMap;
 import java.util.List;
@@ -23,7 +23,7 @@ import java.util.Map;
 public class ByteCodeGenerator {
 
     private ByteCodeProgram program = new ByteCodeProgram();
-    private MethodArea area = MethodArea.getInstance();
+    private MetadataArea area = MetadataArea.getInstance();
     private TACProgram tacProgram;
 
     public ByteCodeGenerator(TACProgram tacProgram) {
@@ -66,7 +66,7 @@ public class ByteCodeGenerator {
                     break;
                 case ARRAY_LEN:
                     emitArrLen(Register.BP, (Symbol) tac.getArg1(), Register.R2);
-                    emitStore(Register.R2, tac.getResult());
+                    emitStore(Register.R2, tac.getResultVar());
                     break;
                 case NEW_INSTANCE:
                     genNewInstance(tac);
@@ -126,7 +126,7 @@ public class ByteCodeGenerator {
             // todo
             emitI2S(Register.R1, Register.R2);
         }
-        emitStore(Register.R2, tac.getResult());
+        emitStore(Register.R2, tac.getResultVar());
     }
 
     private void genCastFloat(TACInstruction tac) {
@@ -134,7 +134,7 @@ public class ByteCodeGenerator {
         if (type == null) return;
         if (type == PrimitiveType.Integer) {
             emitI2F(Register.R1, Register.R2);
-            emitStore(Register.R2, tac.getResult());
+            emitStore(Register.R2, tac.getResultVar());
         }
     }
 
@@ -143,7 +143,7 @@ public class ByteCodeGenerator {
         if (type == null) return;
         if (type == PrimitiveType.Float) {
             emitF2I(Register.R1, Register.R2);
-            emitStore(Register.R2, tac.getResult());
+            emitStore(Register.R2, tac.getResultVar());
         }
     }
 
@@ -212,7 +212,7 @@ public class ByteCodeGenerator {
         Function function = area.getFunctionByIdx(methodConst.getOffset());
         emitInvokeStatic(classConst, methodConst);
         emitInc(Register.SP, function.getVariables().size());
-        emitStore(Register.RV, tac.getResult());
+        emitStore(Register.RV, tac.getResultVar());
     }
 
     private void genInvokeInstanceMethod(TACInstruction tac) {
@@ -226,7 +226,7 @@ public class ByteCodeGenerator {
             emitInvokeSpecial(Register.R1, methodConst);
         }
         emitInc(Register.SP, function.getVariables().size());
-        emitStore(Register.RV, tac.getResult());
+        emitStore(Register.RV, tac.getResultVar());
     }
 
     private void genReturn(TACInstruction tac) {
@@ -238,7 +238,7 @@ public class ByteCodeGenerator {
     }
 
     private void genPutField(TACInstruction tac) {
-        Variable ref = tac.getResult();
+        Variable ref = tac.getResultVar();
         Constant fieldConst = (Constant) tac.getArg1();
         Symbol val = (Symbol) tac.getArg2();
         emitLoad(val, Register.R1);
@@ -247,7 +247,7 @@ public class ByteCodeGenerator {
     }
 
     private void genPutStaticField(TACInstruction tac) {
-        Variable val = tac.getResult();
+        Symbol val = tac.getResult();
         Constant classConst = (Constant) tac.getArg1();
         Constant fieldConst = (Constant) tac.getArg2();
         emitLoad(val, Register.R1);
@@ -255,7 +255,7 @@ public class ByteCodeGenerator {
     }
 
     private void genGetStaticField(TACInstruction tac) {
-        Variable res = tac.getResult();
+        Variable res = tac.getResultVar();
         // todo
         Constant classConst = (Constant) tac.getArg1();
         Constant fieldConst = (Constant) tac.getArg2();
@@ -264,7 +264,7 @@ public class ByteCodeGenerator {
     }
 
     private void genGetField(TACInstruction tac) {
-        Variable res = tac.getResult();
+        Variable res = tac.getResultVar();
         Symbol arg1 = (Symbol) tac.getArg1();
         Constant fieldConst = (Constant) tac.getArg2();
         emitLoad(arg1, Register.R1);
@@ -273,13 +273,13 @@ public class ByteCodeGenerator {
     }
 
     private void genNewInstance(TACInstruction tac) {
-        Variable res = tac.getResult();
+        Variable res = tac.getResultVar();
         emitNewInstance((Constant) tac.getArg1(), Register.R1);
         emitStore(Register.R1, res);
     }
 
     private void genNewArray(TACInstruction tac) {
-        Variable res = tac.getResult();
+        Variable res = tac.getResultVar();
         Constant typeConst = (Constant) tac.getArg1();
         Symbol length = (Symbol) tac.getArg2();
         emitLoad(length, Register.R1);
@@ -307,7 +307,7 @@ public class ByteCodeGenerator {
         if (tac.getArg2() == null) {
             Symbol arg1 = (Symbol) tac.getArg1();
             emitLoad(arg1, Register.R1);
-            emitStore(Register.R1, tac.getResult());
+            emitStore(Register.R1, tac.getResultVar());
         } else {
             // 首先处理数组赋值与取值
             if (tac.isArrayAssign()) {
@@ -322,7 +322,7 @@ public class ByteCodeGenerator {
     }
 
     private void emitArrayAssign(TACInstruction tac) {
-        Variable base = tac.getResult();
+        Variable base = tac.getResultVar();
         Symbol idx = (Symbol) tac.getArg1();
         Symbol val = (Symbol) tac.getArg2();
         emitLoad(val, Register.R1);
@@ -339,7 +339,7 @@ public class ByteCodeGenerator {
     }
 
     private void emitArrayGetVal(TACInstruction tac) {
-        Variable res = tac.getResult();
+        Variable res = tac.getResultVar();
         Variable base = (Variable) tac.getArg1();
         Symbol idx = (Symbol) tac.getArg2();
         emitLoad(base, Register.R1);
@@ -356,7 +356,7 @@ public class ByteCodeGenerator {
     }
 
     private void genBinaryOp(TACInstruction tac)  {
-        Type type = tac.getResult().getType();
+        Type type = tac.getResultVar().getType();
         Symbol arg1 = (Symbol) tac.getArg1();
         Symbol arg2 = (Symbol) tac.getArg2();
         Register r1 = Register.R1, r2 = Register.R2, r3 = Register.R3;
@@ -418,7 +418,7 @@ public class ByteCodeGenerator {
                 emitIcmpOr(r1, r2, r3);
                 break;
         }
-        emitStore(r3, tac.getResult());
+        emitStore(r3, tac.getResultVar());
     }
 
     private Type getType(Object arg1, Object arg2) {

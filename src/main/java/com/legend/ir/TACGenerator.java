@@ -302,7 +302,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         }
         if (instruction != null) {
             program.add(instruction);
-            result = instruction.getResult();
+            result = instruction.getResultVar();
         }
         return result;
     }
@@ -333,6 +333,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             } else if (left instanceof Class){ // 类(静态)方法
                 result = translateStaticFunction(scope, (Class) left, function, args);
             }
+            at.symbolOfNode.put(ast, result);
+            variableMap.put((Variable) result, (Variable) result);
         } else {
             Variable variable = (Variable) at.symbolOfNode.get(ast);
             if (ast.getParent() instanceof Expr
@@ -375,6 +377,14 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             TACInstruction fieldTAC = genPutField(thisV, left, right);
             program.add(fieldTAC);
         }
+    }
+
+    private Variable getVariable(Scope scope, Variable variable) {
+        if (!variableMap.containsKey(variable)) {
+            Variable tmp = scope.createTempVariable(variable.getType());
+            variableMap.put(variable, tmp);
+        }
+        return variableMap.get(variable);
     }
 
     @Override
@@ -825,7 +835,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     }
 
     private TACInstruction genPutStaticField(Object clazz, Variable field, Object val) {
-        return new TACInstruction(TACType.PUT_STATIC_FIELD, (Variable) val, clazz, field, null);
+        return new TACInstruction(TACType.PUT_STATIC_FIELD, (Symbol) val, clazz, field, null);
     }
 
     private TACInstruction genPrint() {

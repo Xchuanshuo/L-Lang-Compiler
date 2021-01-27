@@ -2,7 +2,7 @@ package com.legend.ir;
 
 import com.legend.exception.InterpreterException;
 import com.legend.gen.GlobalConstantPool;
-import com.legend.gen.MethodArea;
+import com.legend.common.MetadataArea;
 import com.legend.semantic.*;
 
 import java.util.ArrayList;
@@ -77,56 +77,6 @@ public class TACProgram {
         for (TACInstruction instruction : instructionList) {
 //            System.out.println(instruction);
             System.out.println(String.format("%8s", i++ + ":    ") + instruction);
-        }
-    }
-
-    public void dumpConstantPool() {
-        GlobalConstantPool constantPool = MethodArea.getInstance()
-                .getConstantPool();
-        System.out.println(constantPool.toString());
-    }
-
-    public void fillConstantPool(Scope scope) {
-        for (Symbol symbol : scope.getSymbols()) {
-            if (symbol instanceof Constant) {
-                MethodArea.getInstance().addConstant((Constant) symbol);
-            } else if (symbol instanceof Scope) {
-                fillConstantPool((Scope) symbol);
-            }
-        }
-    }
-
-    public void fillConstantPool() {
-        MethodArea area = MethodArea.getInstance();
-        for (TACInstruction instruction : instructionList) {
-            if (instruction.getArg1() instanceof Constant) {
-                area.addConstant((Constant) instruction.getArg1());
-            }
-            if (instruction.getArg2() instanceof Constant) {
-                area.addConstant((Constant) instruction.getArg2());
-            }
-            if (instruction.getArg1() instanceof Type) {
-                Constant constant = area.addType((Type) instruction.getArg1());
-                instruction.setArg1(constant);
-            }
-            if (instruction.getArg2() instanceof Type) {
-                Constant constant = area.addType((Type) instruction.getArg2());
-                instruction.setArg2(constant);
-            }
-            if (instruction.getType() == TACType.GET_FIELD ||
-                    instruction.getType() == TACType.GET_STATIC_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
-                area.addConstant(constant);
-                instruction.setArg2(constant);
-            } else if (instruction.getType() == TACType.PUT_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg1());
-                area.addConstant(constant);
-                instruction.setArg1(constant);
-            } else if (instruction.getType() == TACType.PUT_STATIC_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
-                area.addConstant(constant);
-                instruction.setArg2(constant);
-            }
         }
     }
 

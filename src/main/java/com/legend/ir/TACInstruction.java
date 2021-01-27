@@ -2,6 +2,7 @@ package com.legend.ir;
 
 import com.legend.exception.InterpreterException;
 import com.legend.semantic.ArrayType;
+import com.legend.semantic.Symbol;
 import com.legend.semantic.Variable;
 import com.legend.vm.StringPool;
 
@@ -12,14 +13,14 @@ import com.legend.vm.StringPool;
  */
 public class TACInstruction {
 
-    private Variable result; // 接收地址
+    private Symbol result; // 接收地址
     private Object arg1; // 参数1
     private Object arg2; // 参数2
     private String op; // 操作符
     private TACType type; // 指令类型
     private boolean isArrayAssign = false;
 
-    public TACInstruction(TACType type, Variable result,
+    public TACInstruction(TACType type, Symbol result,
                           Object arg1, Object arg2, String op) {
         this.type = type;
         this.result = result;
@@ -60,7 +61,11 @@ public class TACInstruction {
         return type;
     }
 
-    public Variable getResult() {
+    public Variable getResultVar() {
+        return (Variable) result;
+    }
+
+    public Symbol getResult() {
         return result;
     }
 

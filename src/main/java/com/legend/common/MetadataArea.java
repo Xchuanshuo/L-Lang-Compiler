@@ -1,10 +1,12 @@
-package com.legend.gen;
+package com.legend.common;
 
-import com.legend.interpreter.Env;
+import com.legend.gen.GlobalConstantPool;
+import com.legend.gen.Instruction;
 import com.legend.ir.Constant;
+import com.legend.ir.TACInstruction;
+import com.legend.ir.TACType;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
-import com.legend.vm.BuiltInClass;
 import com.legend.vm.Slots;
 
 import java.util.HashMap;
@@ -19,7 +21,7 @@ import java.util.Map;
  *          2.静态字段、类方法信息
  *          3.字符串常量池、整数、实数等字面量
  */
-public class MethodArea {
+public class MetadataArea {
 
     private Map<String, Type> typeMap = new HashMap<>();
     private Map<String, Integer> funcNameToPositionMap = new HashMap<>();
@@ -29,7 +31,7 @@ public class MethodArea {
     private GlobalConstantPool constantPool = new GlobalConstantPool();
     private final Constant globalConst = new Constant(PrimitiveType.String, "GLOBAL");
 
-    private MethodArea() {
+    private MetadataArea() {
         addConstant(globalConst);
         for (Type type : PrimitiveType.baseTypes()) {
             addType(type);
@@ -74,12 +76,15 @@ public class MethodArea {
 
     public Constant addType(Type type) {
         String typeName = type.toString().replace("null_", "");
+        if (type instanceof Function) {
+            typeName = getFunctionSignature((Function) type);
+        }
         Constant constant = new Constant(PrimitiveType.String, typeName);
         addConstant(constant);
         if (typeMap.containsKey(typeName)) {
             return constant;
         }
-        typeMap.put(type.toString(), type);
+        typeMap.put(typeName, type);
         return constant;
     }
 
@@ -168,11 +173,6 @@ public class MethodArea {
         return funcNameToPositionMap.get(signature);
     }
 
-//    public int getFuncPosByIdx(int idx) {
-//        String signature = String.valueOf(constantPool.getByIdx(idx).getValue());
-//        return funcNameToPositionMap.get(signature);
-//    }
-
     public String getFunctionSignature(Function function) {
         StringBuilder sb = new StringBuilder();
         sb.append(function.toString()).append("(");
@@ -186,11 +186,52 @@ public class MethodArea {
         return sb.toString();
     }
 
-    public static MethodArea getInstance() {
+    public void dumpConstantPool() {
+        System.out.println(constantPool.toString());
+    }
+
+    public static MetadataArea getInstance() {
         return Holder.instance;
     }
 
     private static class Holder {
-        private static MethodArea instance = new MethodArea();
+        private static MetadataArea instance = new MetadataArea();
+    }
+
+    public void fillConstantPool(List<TACInstruction> instructionList) {
+        MetadataArea area = MetadataArea.getInstance();
+        for (TACInstruction instruction : instructionList) {
+            if (instruction.getResult() instanceof Constant) {
+                area.addConstant((Constant) instruction.getResult());
+            }
+            if (instruction.getArg1() instanceof Constant) {
+                area.addConstant((Constant) instruction.getArg1());
+            }
+            if (instruction.getArg2() instanceof Constant) {
+                area.addConstant((Constant) instruction.getArg2());
+            }
+            if (instruction.getArg1() instanceof Type) {
+                Constant constant = area.addType((Type) instruction.getArg1());
+                instruction.setArg1(constant);
+            }
+            if (instruction.getArg2() instanceof Type) {
+                Constant constant = area.addType((Type) instruction.getArg2());
+                instruction.setArg2(constant);
+            }
+            if (instruction.getType() == TACType.GET_FIELD ||
+                    instruction.getType() == TACType.GET_STATIC_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+                area.addConstant(constant);
+                instruction.setArg2(constant);
+            } else if (instruction.getType() == TACType.PUT_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg1());
+                area.addConstant(constant);
+                instruction.setArg1(constant);
+            } else if (instruction.getType() == TACType.PUT_STATIC_FIELD) {
+                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+                area.addConstant(constant);
+                instruction.setArg2(constant);
+            }
+        }
     }
 }

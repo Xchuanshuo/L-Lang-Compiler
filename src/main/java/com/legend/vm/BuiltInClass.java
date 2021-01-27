@@ -1,7 +1,6 @@
 package com.legend.vm;
 
-import com.legend.gen.MethodArea;
-import com.legend.parser.ast.ASTNode;
+import com.legend.common.MetadataArea;
 import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 
@@ -13,7 +12,7 @@ import com.legend.semantic.PrimitiveType;
 public class BuiltInClass {
 
     public static void init() {
-        MethodArea.getInstance().addType(PrimitiveType.String.name(), new _String());
+        MetadataArea.getInstance().addType(PrimitiveType.String.name(), new _String());
     }
 
     public static class _String extends Class {

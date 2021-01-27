@@ -4,13 +4,11 @@ import com.legend.common.ByteCodeReader;
 import com.legend.exception.GeneratorException;
 import com.legend.exception.LVMException;
 import com.legend.gen.Instruction;
-import com.legend.gen.MethodArea;
+import com.legend.common.MetadataArea;
 import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
+import com.legend.semantic.*;
 import com.legend.semantic.Class;
-import com.legend.semantic.PrimitiveType;
-import com.legend.semantic.Type;
-import com.legend.semantic.Variable;
 
 import java.util.Stack;
 
@@ -26,7 +24,7 @@ public class LVM {
     private ByteCodeReader reader;
     private Slots registers = new Slots(32);
     private static final int DEFAULT_STACK_SIZE = 10000;
-    private MethodArea area = MethodArea.getInstance();
+    private MetadataArea area = MetadataArea.getInstance();
     private Stack<Integer> retAddressStack = new Stack<>();
     private int entry = 0;
     private Slots stackMemory;
@@ -490,7 +488,6 @@ public class LVM {
     }
 
     private void load(Instruction ins) {
-        Object val;
         Register r1 = ins.getRegOperand(0);
         Offset offset = ins.getOffsetOperand(1);
         Register r3 = ins.getRegOperand(2);
@@ -539,7 +536,10 @@ public class LVM {
                 val = registers.getInt(r1) == 1 ? "true" : "false";
             }
         } else {
-            val = registers.getRef(r1).toString();
+            val = registers.getRef(r1);
+            if (val != null) {
+                val = val.toString();
+            }
         }
         if (val != null && val.equals("\\n")) {
             System.out.println();
@@ -759,6 +759,7 @@ public class LVM {
 
     private void invokeSpecial(Instruction ins) {
         Offset offset = ins.getOffsetOperand(2);
+        Function t = area.getFunctionByIdx(offset.getOffset());
         int methodPos = area.getFuncPosByIdx(offset.getOffset());
         retAddressStack.push(registers.getInt(Register.PC));
         registers.setInt(Register.PC, methodPos);
