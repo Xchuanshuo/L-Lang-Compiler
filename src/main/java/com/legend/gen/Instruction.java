@@ -213,6 +213,10 @@ public class Instruction {
         return opCode;
     }
 
+    public int step() {
+        return opCode.getAddressingType().getBytes() + 1;
+    }
+
     @Override
     public String toString() {
         StringBuilder sb = new StringBuilder();

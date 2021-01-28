@@ -65,8 +65,8 @@ public class Compiler {
         analyzer.analyzeClosure();
 
         // AST解释器
-        LInterpreter interpreter = new LInterpreter(at);
-        program.accept(interpreter);
+//        LInterpreter interpreter = new LInterpreter(at);
+//        program.accept(interpreter);
         TACProgram tacProgram = new TACProgram();
         // 生成三地址码
         TACGenerator irGenerator = new TACGenerator(at, tacProgram);

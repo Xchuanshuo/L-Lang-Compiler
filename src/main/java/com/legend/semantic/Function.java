@@ -94,6 +94,13 @@ public class Function extends Scope implements FunctionType {
         return false;
     }
 
+    public boolean isInitMethod() {
+        if (enclosingScope instanceof Class) {
+            return name.equals("_init_");
+        }
+        return false;
+    }
+
     public void setClosureVariables(Set<Variable> closureVariables) {
         this.closureVariables = closureVariables;
     }

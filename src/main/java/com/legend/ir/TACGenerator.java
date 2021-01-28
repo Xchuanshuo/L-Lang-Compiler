@@ -139,7 +139,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             TACInstruction last = program.lastInstruction();
             if (last != null && last.getType() != TACType.RETURN) {
                 TACInstruction retTAC = new TACInstruction(TACType.RETURN);
-                if (function.isConstructor()) {
+                if (function.isConstructor() || function.isInitMethod()) {
                     retTAC.setArg1(function.getLocalVariables().get(0));
                 }
                 program.add(retTAC);
@@ -405,6 +405,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         }
         List<Symbol> args = getArgsSymbol(ast);
         if (ast.SUPER() != null) {
+            genInvokeInit(variableMap.get(function.getVariables().get(0)),
+                    (Class) function.getEnclosingScope());
             return translateSuperFunCall(scope, function, args);
         } else if (ast.THIS() == null && function.isConstructor()) { // 类构造方法
             return translateConstructor(scope, function, args);
@@ -427,6 +429,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Variable result = scope.createTempVariable(theClass);
         TACInstruction newInstanceTAC = genNewInstance(result, theClass);
         program.add(newInstanceTAC);
+        genInvokeInit(result, theClass);
         if (!(function instanceof DefaultConstructor)) {
             args.add(0, result);
             for (int i = args.size() - 1;i >= 0;i--) {
@@ -438,6 +441,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             program.add(invokeSpecialTAC);
         }
         return result;
+    }
+
+    private void genInvokeInit(Variable classObj, Class theClass) {
+        TACInstruction initInvokeTAC = genInvokeSpecial(classObj, classObj, theClass.getInitMethod());
+        program.add(genArg(classObj));
+        program.add(initInvokeTAC);
     }
 
     private Symbol translateSuperFunCall(Scope scope, Function function, List<Symbol> args) {

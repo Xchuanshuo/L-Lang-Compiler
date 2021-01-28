@@ -3,6 +3,7 @@ this-and-super.l 面向对象的this和super特性。
 */
 class Mammal{
     int weight1;
+    static int t = 100
 
     Mammal(){
         println("Mammal() called");
@@ -26,8 +27,7 @@ class Cow extends Mammal{
 
     Cow(){
         super(200);   //调用父类的构造函数
-        this.weight = 300
-    }
+     }
 
     void speak(){
         println("in Cow.speak");
@@ -35,6 +35,7 @@ class Cow extends Mammal{
         println("this.weight : "  + this.weight);
         println("call super.speak() : " );
         super.speak()
+        println(Mammal.t)
 
         println("Cow speak is : moo~~ moo~~");
     }

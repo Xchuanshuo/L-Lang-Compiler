@@ -54,6 +54,10 @@ public class MetadataArea {
         return staticField;
     }
 
+    public Class getClass(String name) {
+        return (Class) typeMap.get(name);
+    }
+
     public Slots staticVarSlots(String className) {
         Class theClass = (Class) typeMap.get(className);
         if (theClass == null) {
@@ -177,6 +181,14 @@ public class MetadataArea {
             return funcNameToPositionMap.get(newFuncName);
         } else if (clazz.getParentClass() != null) {
             return getFuncPosByIdx(clazz.getParentClass(), idx);
+        }
+        throw new LVMException("No exist a function : " + newFuncName);
+    }
+
+    public int getFunctionPos(Function function) {
+        String newFuncName = getFunctionSignature(function);
+        if (funcNameToPositionMap.containsKey(newFuncName)) {
+            return funcNameToPositionMap.get(newFuncName);
         }
         throw new LVMException("No exist a function : " + newFuncName);
     }

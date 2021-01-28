@@ -7,6 +7,8 @@ import com.legend.semantic.Variable.This;
 import com.legend.vm.Object;
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
 import java.util.List;
 
 /**
@@ -25,6 +27,7 @@ public class Class extends Scope implements Type {
     private int staticFieldCount = 0;
     private List<Variable> fields;
     private List<Variable> staticFields;
+    private boolean isInit = false;
 
     private DefaultConstructor defaultConstructor;
 
@@ -102,6 +105,14 @@ public class Class extends Scope implements Type {
         return superRef;
     }
 
+    public boolean isInited() {
+        return isInit;
+    }
+
+    public void setInit(boolean init) {
+        isInit = init;
+    }
+
     @Override
     public String toString() {
         return enclosingScope + "_" + name;
@@ -167,13 +178,22 @@ public class Class extends Scope implements Type {
     }
 
     public Variable findField(String name) {
-
         return getVariable(name);
     }
 
     // 查找构造函数
     public Function findConstructor(List<Type> paramTypes) {
         return super.getFunction(name, paramTypes);
+    }
+
+    // 普通成员变量值初始化方法
+    public Function getInitMethod() {
+        return getFunction("_init_", Collections.singletonList(this));
+    }
+
+    // 静态成员初始化方法
+    public Function getStaticInitMethod() {
+        return findStaticMethod("_static_init_", new ArrayList<>());
     }
 
     // 查找函数

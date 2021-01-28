@@ -1,6 +1,13 @@
-int[] a = {1, 4, 2, 3}
-int v = a[0]
-int l = 0, i = 4
-while (a[i-=1] >= v && i != l) {
-    println(i)
+class Test {
+    int a = 1
+    static string s = "ss"
+
+    Test(int a) {
+        this.a = a
+        Test.s = "ssssss1" + a
+    }
 }
+
+Test t = Test(10)
+println(t.a)
+println(Test.s)

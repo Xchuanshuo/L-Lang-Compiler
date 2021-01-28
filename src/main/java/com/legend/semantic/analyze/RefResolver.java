@@ -158,7 +158,7 @@ public class RefResolver extends BaseASTListener {
             String fieldName = ast.getChild(1).getText();
             Variable variable = theClass.getVariable(fieldName);
             if (variable == null) {
-                at.log("unable find a field " + fieldName + "in Class " + theClass, ast);
+                at.log("unable find a field [" + fieldName + "] in Class " + theClass, ast);
             } else {
                 at.symbolOfNode.put(ast, variable);
                 type = variable.getType();

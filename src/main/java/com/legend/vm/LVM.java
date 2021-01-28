@@ -5,6 +5,7 @@ import com.legend.exception.GeneratorException;
 import com.legend.exception.LVMException;
 import com.legend.gen.Instruction;
 import com.legend.common.MetadataArea;
+import com.legend.gen.OpCode;
 import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
 import com.legend.semantic.*;
@@ -717,6 +718,12 @@ public class LVM {
         Offset offset1 = ins.getOffsetOperand(0);
         Offset offset2 = ins.getOffsetOperand(1);
         Register tR = ins.getRegOperand(2);
+        Class clazz = area.getClassByIdx(offset1.getOffset());
+        if (!clazz.isInited()) {
+            invokeStaticInit(ins.step(), clazz);
+            clazz.setInit(true);
+            return;
+        }
         String className = area.getStrConstByIdx(offset1.getOffset());
         String fieldName = area.getStrConstByIdx(offset2.getOffset());
         Variable field = area.getStaticField(className, fieldName);
@@ -730,6 +737,13 @@ public class LVM {
         Register valR = ins.getRegOperand(0);
         Offset offset1 = ins.getOffsetOperand(1);
         Offset offset2 = ins.getOffsetOperand(2);
+        Class clazz = area.getClassByIdx(offset1.getOffset());
+        if (!clazz.isInited()) { // trick
+            int step = ins.step() + OpCode.LOAD.getAddressingType().getBytes() + 1;
+            invokeStaticInit(step, clazz);
+            clazz.setInit(true);
+            return;
+        }
         String className = area.getStrConstByIdx(offset1.getOffset());
         String fieldName = area.getStrConstByIdx(offset2.getOffset());
         Variable field = area.getStaticField(className, fieldName);
@@ -737,6 +751,13 @@ public class LVM {
         Slots slots = area.staticVarSlots(className);
         Type type = field.getType();
         setValByType(type, registers, slots, valR.getIdx(), id);
+    }
+
+    private void invokeStaticInit(int reverse, Class clazz) {
+        Function method = clazz.getStaticInitMethod();
+        int pos = area.getFunctionPos(method);
+        retAddressStack.push(registers.getInt(Register.PC) - reverse);
+        registers.setInt(Register.PC, pos);
     }
 
     private void setValByType(Type type, Slots srcSlots, Slots destSlots,
