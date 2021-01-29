@@ -29,10 +29,12 @@ public enum TACType {
     STR_LEN,
     STR_AT,
 
-    NEW_INSTANCE,
-    INVOKE_SPECIAL,
-    INVOKE_VIRTUAL,
-    INVOKE_STATIC,
+    NEW_INSTANCE, // 创建一个类实例对象
+    NEW_FUNC_OBJ, // 创建一个函数对象
+    INVOKE_SPECIAL, // 调用构造方法
+    INVOKE_VIRTUAL, // 调用普通实例方法
+    INVOKE_STATIC, // 调用静态方法
+    INVOKE_VAR_FUNC, // 调用函数变量的实际函数
     GET_FIELD,
     PUT_FIELD,
     GET_STATIC_FIELD,

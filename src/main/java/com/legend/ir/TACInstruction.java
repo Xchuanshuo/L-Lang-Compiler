@@ -145,6 +145,10 @@ public class TACInstruction {
                 } else {
                     return String.format("%s = INVOKE_STATIC %s", result, arg1);
                 }
+            case NEW_FUNC_OBJ:
+                return String.format("%s = NEW_FUNC_OBJ %s", result, arg1);
+            case INVOKE_VAR_FUNC:
+                return String.format("%s = INVOKE_VAR_FUNC %s", result, arg1);
             case GET_FIELD:
                 return String.format("%s = %s GET_FIELD %s", result, arg1, arg2);
             case PUT_FIELD:

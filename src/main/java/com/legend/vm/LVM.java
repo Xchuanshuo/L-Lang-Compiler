@@ -112,6 +112,9 @@ public class LVM {
             case INC:
                 inc(ins);
                 break;
+            case INC_1:
+                inc1(ins);
+                break;
             case DEC:
                 dec(ins);
                 break;
@@ -226,6 +229,9 @@ public class LVM {
             case NEW_INSTANCE:
                 newInstance(ins);
                 break;
+            case NEW_FUNC_OBJ:
+                newFuncObj(ins);
+                break;
             case GET_FIELD:
                 getField(ins);
                 break;
@@ -246,6 +252,12 @@ public class LVM {
                 break;
             case INVOKE_STATIC:
                 invokeStatic(ins);
+                break;
+            case INVOKE_VAR_FUNC:
+                invokeVarFunc(ins);
+                break;
+            case GET_FUNC_LOCALS:
+                getFuncLocals(ins);
                 break;
             case RET:
                 ret();
@@ -354,6 +366,12 @@ public class LVM {
     private void inc(Instruction ins) {
         Register r1 = ins.getRegOperand(0);
         int number = ins.getImmediateNumber(1);
+        registers.setInt(r1, registers.getInt(r1) + number);
+    }
+
+    private void inc1(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        int number = registers.getInt(ins.getRegOperand(1));
         registers.setInt(r1, registers.getInt(r1) + number);
     }
 
@@ -683,6 +701,14 @@ public class LVM {
         registers.setRef(resultR, ref);
     }
 
+    private void newFuncObj(Instruction ins) {
+        Offset offset = ins.getOffsetOperand(1);
+        Register resultR = ins.getRegOperand(2);
+        Function function = area.getFunctionByIdx(offset.getOffset());
+        Object ref = new Object(function);
+        registers.setRef(resultR, ref);
+    }
+
     private void getField(Instruction ins) {
         Register refR = ins.getRegOperand(0);
         Offset offset = ins.getOffsetOperand(1);
@@ -796,6 +822,20 @@ public class LVM {
         int methodPos = area.getFuncPosByIdx(offset2.getOffset());
         retAddressStack.push(registers.getInt(Register.PC));
         registers.setInt(Register.PC, methodPos);
+    }
+
+    private void invokeVarFunc(Instruction ins) {
+        Object ref = registers.getRef(ins.getRegOperand(0));
+        Function function  = ref.function();
+        int methodPos = area.getFunctionPos(function);
+        retAddressStack.push(registers.getInt(Register.PC));
+        registers.setInt(Register.PC, methodPos);
+    }
+
+    private void getFuncLocals(Instruction ins) {
+        Object ref = registers.getRef(ins.getRegOperand(0));
+        int localsSize = ref.function().getLocalsSize();
+        registers.setInt(ins.getRegOperand(1), localsSize);
     }
 
     private void ret() {

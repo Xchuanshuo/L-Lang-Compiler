@@ -72,6 +72,9 @@ public class ByteCodeGenerator {
                 case NEW_INSTANCE:
                     genNewInstance(tac);
                     break;
+                case NEW_FUNC_OBJ:
+                    genNewFuncObj(tac);
+                    break;
                 case GET_FIELD:
                     genGetField(tac);
                     break;
@@ -96,6 +99,9 @@ public class ByteCodeGenerator {
                     break;
                 case INVOKE_STATIC:
                     genInvokeStaticMethod(tac);
+                    break;
+                case INVOKE_VAR_FUNC:
+                    genInvokeVarFunction(tac);
                     break;
                 case CAST_INT:
                     genCastInt(tac);
@@ -230,6 +236,17 @@ public class ByteCodeGenerator {
         emitStore(Register.RV, tac.getResultVar());
     }
 
+    private void genInvokeVarFunction(TACInstruction tac) {
+        Symbol symbol = (Symbol) tac.getArg1();
+        emitLoad(symbol, Register.R1);
+        emitInvokeVarFunc(Register.R1, Register.R2);
+        // 动态计算函数局部变量表大小
+        emitLoad(symbol, Register.R1);
+        emitGetFuncLocals(Register.R1, Register.R2);
+        emitInc1(Register.SP, Register.R2);
+        emitStore(Register.RV, tac.getResultVar());
+    }
+
     private void genReturn(TACInstruction tac) {
         if (tac.getArg1() != null) {
             emitLoad((Symbol) tac.getArg1(), Register.RV);
@@ -271,6 +288,12 @@ public class ByteCodeGenerator {
         emitLoad(arg1, Register.R1);
         emitGetField(Register.R1, fieldConst, Register.R2);
         emitStore(Register.R2, res);
+    }
+
+    private void genNewFuncObj(TACInstruction tac) {
+        Variable res = tac.getResultVar();
+        emitNewFuncObj((Constant) tac.getArg1(), Register.R1);
+        emitStore(Register.R1, res);
     }
 
     private void genNewInstance(TACInstruction tac) {
@@ -573,6 +596,10 @@ public class ByteCodeGenerator {
         program.addIns(Instruction.immediate(OpCode.INC, r1, new ImmediateNumber((Integer) constant.getValue())));
     }
 
+    private void emitInc1(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.INC_1, r1, r2));
+    }
+
     private void emitDec(Register r1, int val) {
         emitDec(r1, new Constant(PrimitiveType.Integer, val));
     }
@@ -729,6 +756,11 @@ public class ByteCodeGenerator {
                 Register.CONSTANT, new Offset(classConst.getOffset()), dest));
     }
 
+    private void emitNewFuncObj(Constant classConst, Register dest) {
+        program.addIns(Instruction.offset1(OpCode.NEW_FUNC_OBJ,
+                Register.CONSTANT, new Offset(classConst.getOffset()), dest));
+    }
+
     private void emitGetField(Register r1, Constant fieldConst, Register dest) {
         program.addIns(Instruction.offset1(OpCode.GET_FIELD,
                 r1, new Offset(fieldConst.getOffset()), dest));
@@ -768,6 +800,15 @@ public class ByteCodeGenerator {
         program.addIns(Instruction.offset4(OpCode.INVOKE_STATIC,
                 Register.CONSTANT, new Offset(classConst.getOffset()),
                 new Offset(methodIdx.getOffset())));
+    }
+
+    private void emitInvokeVarFunc(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.INVOKE_VAR_FUNC, r1, r2));
+    }
+
+    // 动态获取函数局部变量表大小
+    private void emitGetFuncLocals(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.GET_FUNC_LOCALS, r1, r2));
     }
 
     private void emitI2F(Register r1, Register r2) {

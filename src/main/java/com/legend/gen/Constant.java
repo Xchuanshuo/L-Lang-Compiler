@@ -14,7 +14,8 @@ public class Constant {
     public static final byte LSHIFT = 0x09;
     public static final byte RSHIFT = 0x0A;
     public static final byte INC = 0x0B;
-    public static final byte DEC = 0x0C;
+    public static final byte INC_1 = 0x0C;
+    public static final byte DEC = 0x0D;
     public static final byte FADD = 0x10;
     public static final byte FSUB = 0x11;
     public static final byte FMUL = 0x12;
@@ -59,15 +60,18 @@ public class Constant {
 
     // 类与对象
     public static final byte NEW_INSTANCE = 0x60;
-    public static final byte GET_FIELD = 0x61;
-    public static final byte GET_S_FIELD = 0x62;
-    public static final byte PUT_FIELD = 0x63;
+    public static final byte NEW_FUNC_OBJ = 0x61;
+    public static final byte GET_FIELD = 0x62;
+    public static final byte GET_S_FIELD = 0x63;
+    public static final byte PUT_FIELD = 0x64;
     public static final byte PUT_S_FIELD = 0x65;
 
     // 函数调用相关
     public static final byte INVOKE_VIRTUAL = 0x70;
     public static final byte INVOKE_SPECIAL = 0x71;
     public static final byte INVOKE_STATIC = 0x72;
+    public static final byte INVOKE_VAR_FUNC = 0x73;
+    public static final byte GET_FUNC_LOCALS = 0x74;
     // 返回
     public static final byte RET = 0x76;
 

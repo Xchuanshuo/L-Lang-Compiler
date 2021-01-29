@@ -90,4 +90,15 @@ public class DefaultFunctionType implements FunctionType {
         }
         return true;
     }
+
+    @Override
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("(");
+        for (Type type : paramTypes) {
+            sb.append(type).append(",");
+        }
+        sb.append(")").append(returnType);
+        return sb.toString();
+    }
 }

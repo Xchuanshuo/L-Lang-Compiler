@@ -7,6 +7,7 @@ import com.legend.parser.ast.*;
 import com.legend.parser.common.BaseASTVisitor;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
+import com.legend.semantic.FunctionType;
 import com.legend.semantic.PrimitiveType;
 
 import java.util.*;
@@ -188,7 +189,9 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
             if (s instanceof Variable) { // 普通变量分配新名字
                 symbol = processVariable(ast, s);
-            } else if (s instanceof Function || s instanceof Class) {
+            } else if (s instanceof Function) {
+                symbol = newFunctionObj(ast, (Function) s);
+            } else if (s instanceof Class) {
                 symbol = s;
             }
         } else if (ast.getAstNodeType() == ASTNodeType.BINARY_EXP) {
@@ -237,6 +240,13 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             symbol = variableMap.get(s);
         }
         return symbol;
+    }
+
+    private Symbol newFunctionObj(Expr ast, Function function) {
+        Variable result = getScope(ast).createTempVariable(function);
+        TACInstruction newFuncObjTAC = genNewFuncObj(result, function);
+        program.add(newFuncObjTAC);
+        return result;
     }
 
     private Symbol processBinaryExp(Expr ast) {
@@ -396,9 +406,14 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     @Override
     public Symbol visitFunctionCall(FunctionCall ast) {
-        String funcName = ast.identifier().getText();
         Scope scope = getScope(ast);
-        Function function = (Function) at.symbolOfNode.get(ast);
+        Symbol symbol = at.symbolOfNode.get(ast);
+        if (symbol instanceof Variable) { // 函数变量
+            Variable funcVar = variableMap.get(symbol);
+            return translateVarFunction(scope, funcVar, getArgsSymbol(ast));
+        }
+        Function function = (Function) symbol;
+        String funcName = ast.identifier().getText();
         if (BuiltInFunction.isBuiltInFunc(funcName)) {
             // 内置函数
             return translateBuiltInFunction(ast);
@@ -489,6 +504,19 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Variable result = scope.createTempVariable(function.returnType());
         TACInstruction invokeVirtualTAC = genInvokeVirtual(result, classObj, function);
         program.add(invokeVirtualTAC);
+        return result;
+    }
+
+    private Symbol translateVarFunction(Scope scope, Variable funcVar, List<Symbol> args) {
+        FunctionType functionType = (FunctionType) funcVar.getType();
+        for (int i = args.size() - 1;i >= 0;i--) {
+            Symbol symbol = args.get(i);
+            TACInstruction argTAC = genArg(symbol);
+            program.add(argTAC);
+        }
+        Variable result = scope.createTempVariable(functionType.returnType());
+        TACInstruction invokeVarFunc = genInvokeVarFunc(result, funcVar);
+        program.add(invokeVarFunc);
         return result;
     }
 
@@ -851,6 +879,14 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private TACInstruction genInvokeStatic(Variable result, Function function) {
         return genInvokeStatic(result, null, function);
+    }
+
+    private TACInstruction genNewFuncObj(Variable result, Function function) {
+        return new TACInstruction(TACType.NEW_FUNC_OBJ, result, function, null, null);
+    }
+
+    private TACInstruction genInvokeVarFunc(Variable result, Variable funcVar) {
+        return new TACInstruction(TACType.INVOKE_VAR_FUNC, result, funcVar, null, null);
     }
 
     private TACInstruction genGetField(Variable result, Object arg1, Object arg2) {

@@ -38,6 +38,7 @@ public class OpCode {
     public static final OpCode LSHIFT = new OpCode(Constant.LSHIFT, "LSHIFT", REGISTER);
     public static final OpCode RSHIFT = new OpCode(Constant.RSHIFT, "RSHIFT", REGISTER);
     public static final OpCode INC = new OpCode(Constant.INC, "INC", IMMEDIATE);
+    public static final OpCode INC_1 = new OpCode(Constant.INC_1, "INC_1", REGISTER1);
     public static final OpCode DEC = new OpCode(Constant.DEC, "DEC", IMMEDIATE);
     public static final OpCode FADD = new OpCode(Constant.FADD, "FADD", REGISTER);
     public static final OpCode FSUB = new OpCode(Constant.FSUB, "FSUB", REGISTER);
@@ -78,6 +79,7 @@ public class OpCode {
     public static final OpCode AA_STORE = new OpCode(Constant.AA_STORE, "AA_STORE", REGISTER);
 
     public static final OpCode NEW_INSTANCE = new OpCode(Constant.NEW_INSTANCE, "NEW_INSTANCE", OFFSET1);
+    public static final OpCode NEW_FUNC_OBJ = new OpCode(Constant.NEW_FUNC_OBJ, "NEW_FUNC_OBJ", OFFSET1);
     public static final OpCode GET_FIELD = new OpCode(Constant.GET_FIELD, "GET_FIELD", OFFSET1);
     public static final OpCode GET_S_FIELD = new OpCode(Constant.GET_S_FIELD, "GET_S_FIELD", OFFSET3);
     public static final OpCode PUT_FIELD = new OpCode(Constant.PUT_FIELD, "PUT_FIELD", OFFSET2);
@@ -86,6 +88,8 @@ public class OpCode {
     public static final OpCode INVOKE_VIRTUAL = new OpCode(Constant.INVOKE_VIRTUAL, "INVOKE_VIRTUAL", OFFSET2);
     public static final OpCode INVOKE_SPECIAL = new OpCode(Constant.INVOKE_SPECIAL, "INVOKE_SPECIAL", OFFSET2);
     public static final OpCode INVOKE_STATIC = new OpCode(Constant.INVOKE_STATIC, "INVOKE_STATIC", OFFSET4);
+    public static final OpCode INVOKE_VAR_FUNC = new OpCode(Constant.INVOKE_VAR_FUNC, "INVOKE_VAR_FUNC", REGISTER1);
+    public static final OpCode GET_FUNC_LOCALS = new OpCode(Constant.GET_FUNC_LOCALS, "GET_FUNC_LOCALS", REGISTER1);
 
     public static final OpCode I2F = new OpCode(Constant.I2F, "I2F", REGISTER1);
     public static final OpCode I2B = new OpCode(Constant.I2B, "I2B", REGISTER1);

@@ -27,7 +27,7 @@ public class Compiler {
 
     public static void main(String[] args) throws IOException, LexicalException, ParseException, GeneratorException {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/this-and-super.l";
+                "L-Lang-Compiler/example/closure-test.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);

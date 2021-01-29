@@ -1,20 +1,27 @@
 package com.legend.vm;
 
 import com.legend.semantic.Class;
+import com.legend.semantic.Function;
+import com.legend.semantic.Type;
 
 public class Object {
 
-    private Class clazz;
+    private Type type;
     private java.lang.Object data;
 
     public Object(Class clazz) {
-        this.clazz = clazz;
+        this.type = clazz;
         this.data = new Slots(clazz.getFieldCount());
     }
 
     public Object(Class clazz,java.lang.Object data) {
-        this.clazz = clazz;
+        this.type = clazz;
         this.data = data;
+    }
+
+    public Object(Function function) {
+        this.type = function;
+        this.data = new Slots(function.getLocalsSize());
     }
 
     public void setData(java.lang.Object data) {
@@ -22,7 +29,11 @@ public class Object {
     }
 
     public Class clazz() {
-        return clazz;
+        return (Class) type;
+    }
+
+    public Function function() {
+        return (Function) type;
     }
 
     public byte[] bytes() {
@@ -66,6 +77,6 @@ public class Object {
 
     @Override
     public String toString() {
-        return String.valueOf(data).replace("Slots", clazz.getName());
+        return String.valueOf(data).replace("Slots", type.name());
     }
 }
