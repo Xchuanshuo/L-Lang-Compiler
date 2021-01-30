@@ -227,13 +227,13 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 Function function = at.enclosingFunctionOfNode(ast);
                 Variable thisV = variableMap.get(function.getVariables().get(0));
                 boolean isLeftChild = ast.getParent() instanceof Expr
-                        && ast.leftChild() == ast;
+                        && ((Expr)ast.getParent()).leftChild() == ast;
                 if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
                     return s;
                 }
                 TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
                 program.add(fieldTAC);
-                if (ast.getParent().getToken().isAssignOperator()) {
+                if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
                     tmpFieldData.offer((Variable) s);
                 }
             }
@@ -259,15 +259,15 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     private Symbol processModuleVar(Expr ast, Variable moduleVar) {
         Scope scope = getScope(ast);
         boolean isLeftChild = ast.getParent() instanceof Expr
-                && ast.leftChild() == ast;
+                && ((Expr)ast.getParent()).leftChild() == ast;
         if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
             return moduleVar;
         }
         Variable result = scope.createTempVariable(moduleVar.getType());
-        NameSpace module = (NameSpace) result.getEnclosingScope();
+        NameSpace module = (NameSpace) moduleVar.getEnclosingScope();
         TACInstruction getModuleVarTAC = genGetModuleVar(result, module, moduleVar);
         program.add(getModuleVarTAC);
-        if (ast.getParent().getToken().isAssignOperator()) {
+        if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
             tmpFieldData.offer(moduleVar);
         }
         return result;
@@ -598,6 +598,9 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 program.add(fieldTAC);
             }
             variableMap.put(arrayV, result);
+        } else if (arrayV.isModuleVar()) {
+            Variable result = (Variable) processModuleVar(ast, arrayV);
+            variableMap.put(arrayV, result);
         }
         arrayV = variableMap.get(arrayV);
         Type curType = arrayV.getType();
@@ -852,7 +855,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             instruction = new TACInstruction(TACType.ASSIGN, (Variable) lastLeft, tmpIdxData.poll(), tmpResult, "=");
             instruction.setArrayAssign(true);
         } else {
-            if (!tmpFieldData.isEmpty()) {
+            if (tmpFieldData.size() > 0) {
                 Variable variable = tmpFieldData.poll();
                 assert variable != null;
                 if (variable.isModuleVar()) {
