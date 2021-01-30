@@ -5,7 +5,7 @@ package com.legend.exception;
  * @data by on 20-9-11.
  * @description 代码生成器异常
  */
-public class GeneratorException extends Throwable {
+public class GeneratorException extends RuntimeException {
 
     private String msg;
 

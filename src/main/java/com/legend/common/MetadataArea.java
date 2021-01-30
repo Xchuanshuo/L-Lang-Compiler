@@ -25,10 +25,12 @@ import java.util.Map;
 public class MetadataArea {
 
     private Map<String, Type> typeMap = new HashMap<>();
+    private Map<String, NameSpace> moduleMap = new HashMap<>();
     private Map<String, Integer> funcNameToPositionMap = new HashMap<>();
     // 记录offset到label的映射 主要目的是为了方便查看信息
     private Map<Integer, String> positionToLabelMap = new HashMap<>();
     private Map<String, Slots> staticFieldSlotsMap = new HashMap<>();
+    private Map<String, Slots> moduleVarSlotsMap = new HashMap<>();
     private GlobalConstantPool constantPool = new GlobalConstantPool();
     private final Constant globalConst = new Constant(PrimitiveType.String, "GLOBAL");
 
@@ -54,6 +56,19 @@ public class MetadataArea {
         return staticField;
     }
 
+    public Variable getModuleVar(String moduleName, String varName) {
+        NameSpace nameSpace = moduleMap.get(moduleName);
+        if (nameSpace == null) {
+            throw new RuntimeException("No exist a module name of " + moduleName);
+        }
+        Variable variable = nameSpace.findModuleVar(varName);
+        if (variable == null) {
+            throw new RuntimeException("No exist a variable of "
+                    + varName + " in class [" + moduleName + "]");
+        }
+        return variable;
+    }
+
     public Class getClass(String name) {
         return (Class) typeMap.get(name);
     }
@@ -68,6 +83,18 @@ public class MetadataArea {
             staticFieldSlotsMap.put(className, slots);
         }
         return staticFieldSlotsMap.get(className);
+    }
+
+    public Slots moduleVarSlots(String moduleName) {
+        NameSpace module = moduleMap.get(moduleName);
+        if (module == null) {
+            throw new RuntimeException("No exist a module name of " + moduleName);
+        }
+        if (!moduleVarSlotsMap.containsKey(moduleName)) {
+            Slots slots = new Slots(module.getModuleVarCount());
+            moduleVarSlotsMap.put(moduleName, slots);
+        }
+        return moduleVarSlotsMap.get(moduleName);
     }
 
     public void setConstantPool(GlobalConstantPool constantPool) {
@@ -92,6 +119,17 @@ public class MetadataArea {
         return constant;
     }
 
+    public Constant addModule(NameSpace nameSpace) {
+        String moduleName = nameSpace.getName();
+        Constant constant = new Constant(PrimitiveType.String, moduleName);
+        addConstant(constant);
+        if (moduleMap.containsKey(moduleName)) {
+            return constant;
+        }
+        moduleMap.put(moduleName, nameSpace);
+        return constant;
+    }
+
     public void addType(String name, Type type) {
         typeMap.put(name, type);
     }
@@ -99,7 +137,6 @@ public class MetadataArea {
     public Type getTypeByName(String name) {
         return typeMap.get(name);
     }
-
 
     public void addConstant(Constant constant) {
         constantPool.add(constant);
@@ -254,20 +291,36 @@ public class MetadataArea {
                 Constant constant = area.addType((Type) instruction.getArg2());
                 instruction.setArg2(constant);
             }
-            if (instruction.getType() == TACType.GET_FIELD ||
-                    instruction.getType() == TACType.GET_STATIC_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
-                area.addConstant(constant);
-                instruction.setArg2(constant);
-            } else if (instruction.getType() == TACType.PUT_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg1());
-                area.addConstant(constant);
-                instruction.setArg1(constant);
-            } else if (instruction.getType() == TACType.PUT_STATIC_FIELD) {
-                Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
-                area.addConstant(constant);
-                instruction.setArg2(constant);
-            }
+            fillClassField(area, instruction);
+            fillModule(area, instruction);
+        }
+    }
+
+    private void fillModule(MetadataArea area, TACInstruction tac) {
+        if (tac.getType() == TACType.GET_MODULE_VAR ||
+                tac.getType() == TACType.PUT_MODULE_VAR) {
+            Constant constant1 = area.addModule((NameSpace) tac.getArg1());
+            tac.setArg1(constant1);
+            Constant constant2 = new Constant(PrimitiveType.String, tac.getArg2());
+            area.addConstant(constant2);
+            tac.setArg2(constant2);
+        }
+    }
+
+    private void fillClassField(MetadataArea area, TACInstruction instruction) {
+        if (instruction.getType() == TACType.GET_FIELD ||
+                instruction.getType() == TACType.GET_STATIC_FIELD) {
+            Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+            area.addConstant(constant);
+            instruction.setArg2(constant);
+        } else if (instruction.getType() == TACType.PUT_FIELD) {
+            Constant constant = new Constant(PrimitiveType.String, instruction.getArg1());
+            area.addConstant(constant);
+            instruction.setArg1(constant);
+        } else if (instruction.getType() == TACType.PUT_STATIC_FIELD) {
+            Constant constant = new Constant(PrimitiveType.String, instruction.getArg2());
+            area.addConstant(constant);
+            instruction.setArg2(constant);
         }
     }
 }

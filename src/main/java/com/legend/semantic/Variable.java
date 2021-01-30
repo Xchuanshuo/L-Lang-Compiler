@@ -14,6 +14,7 @@ public class Variable extends Symbol {
     private Type type;
     // a缺省值
     private Object defaultValue = null;
+    private boolean isUpValue = false;
 
     public Variable(String name, Scope enclosingScope, ASTNode astNode) {
         this.name = name;
@@ -35,6 +36,18 @@ public class Variable extends Symbol {
 
     public Type getType() {
         return type;
+    }
+
+    public boolean isModuleVar() {
+        return enclosingScope instanceof NameSpace;
+    }
+
+    public boolean isUpValue() {
+        return isUpValue;
+    }
+
+    public void setUpValue(boolean upValue) {
+        isUpValue = upValue;
     }
 
     @Override

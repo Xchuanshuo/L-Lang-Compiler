@@ -34,7 +34,7 @@ public class Register extends Operand {
 
     public static final Register GLOBAL = new Register("GLOBAL", (byte) 20);
 
-    public static Register getRegByIdx(int reg) throws GeneratorException {
+    public static Register getRegByIdx(int reg) {
         if (reg < 0 || reg >= registers.length) {
             throw new GeneratorException("Not exist Register's address is " + reg);
         }

@@ -35,10 +35,14 @@ public enum TACType {
     INVOKE_VIRTUAL, // 调用普通实例方法
     INVOKE_STATIC, // 调用静态方法
     INVOKE_VAR_FUNC, // 调用函数变量的实际函数
-    GET_FIELD,
-    PUT_FIELD,
-    GET_STATIC_FIELD,
-    PUT_STATIC_FIELD,
+    GET_FIELD, // 获取类普通成员字段
+    PUT_FIELD, // 设置...字段
+    GET_STATIC_FIELD, // 获取类静态字段
+    PUT_STATIC_FIELD, // 设置类静态字段
+    GET_MODULE_VAR,  // 获取模块(全局)变量
+    PUT_MODULE_VAR, // 设置模块变量
+    GET_UPVALUE_VAR, // 获取自由变量
+    PUT_UPVALUE_VAR, // 设置自由变量
     NEW_ARRAY, // new_array type n
     ARRAY_LEN, // ARRAY_LEN arrObj
 }

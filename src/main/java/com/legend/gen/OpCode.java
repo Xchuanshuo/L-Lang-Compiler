@@ -81,9 +81,11 @@ public class OpCode {
     public static final OpCode NEW_INSTANCE = new OpCode(Constant.NEW_INSTANCE, "NEW_INSTANCE", OFFSET1);
     public static final OpCode NEW_FUNC_OBJ = new OpCode(Constant.NEW_FUNC_OBJ, "NEW_FUNC_OBJ", OFFSET1);
     public static final OpCode GET_FIELD = new OpCode(Constant.GET_FIELD, "GET_FIELD", OFFSET1);
-    public static final OpCode GET_S_FIELD = new OpCode(Constant.GET_S_FIELD, "GET_S_FIELD", OFFSET3);
     public static final OpCode PUT_FIELD = new OpCode(Constant.PUT_FIELD, "PUT_FIELD", OFFSET2);
+    public static final OpCode GET_S_FIELD = new OpCode(Constant.GET_S_FIELD, "GET_S_FIELD", OFFSET3);
     public static final OpCode PUT_S_FIELD = new OpCode(Constant.PUT_S_FIELD, "PUT_S_FIELD", OFFSET4);
+    public static final OpCode GET_MODULE_VAR = new OpCode(Constant.GET_MODULE_VAR, "GET_MODULE_VAR", OFFSET3);
+    public static final OpCode PUT_MODULE_VAR = new OpCode(Constant.PUT_MODULE_VAR, "PUT_MODULE_VAR", OFFSET4);
 
     public static final OpCode INVOKE_VIRTUAL = new OpCode(Constant.INVOKE_VIRTUAL, "INVOKE_VIRTUAL", OFFSET2);
     public static final OpCode INVOKE_SPECIAL = new OpCode(Constant.INVOKE_SPECIAL, "INVOKE_SPECIAL", OFFSET2);

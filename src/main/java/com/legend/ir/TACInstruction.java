@@ -165,6 +165,14 @@ public class TACInstruction {
                 } else {
                     return String.format("PUT_STATIC_FIELD %s %s", arg1, result);
                 }
+            case GET_MODULE_VAR:
+                return String.format("%s = %s GET_MODULE_VAR %s", result, arg1, arg2);
+            case PUT_MODULE_VAR:
+                return String.format("%s PUT_MODULE_VAR %s %s", arg1, arg2, result);
+            case GET_UPVALUE_VAR:
+                return String.format("%s = %s GET_UPVALUE_VAR %s", result, arg1, arg2);
+            case PUT_UPVALUE_VAR:
+                return String.format("%s = %s PUT_UPVALUE_VAR %s", result, arg1, arg2);
         }
         throw new InterpreterException("Unknown opcode type:" + type);
     }

@@ -244,6 +244,12 @@ public class LVM {
             case PUT_S_FIELD:
                 putStaticField(ins);
                 break;
+            case GET_MODULE_VAR:
+                getModuleVar(ins);
+                break;
+            case PUT_MODULE_VAR:
+                putModuleVar(ins);
+                break;
             case INVOKE_VIRTUAL:
                 invokeVirtual(ins);
                 break;
@@ -738,6 +744,32 @@ public class LVM {
             ref.fieldSlots().setRef(id, registers.getRef(valR));
         }
         setValByType(type, registers, ref.fieldSlots(), valR.getIdx(), id);
+    }
+
+    private void getModuleVar(Instruction ins) {
+        Offset offset1 = ins.getOffsetOperand(0);
+        Offset offset2 = ins.getOffsetOperand(1);
+        Register tR = ins.getRegOperand(2);
+        String moduleName = area.getStrConstByIdx(offset1.getOffset());
+        String varName = area.getStrConstByIdx(offset2.getOffset());
+        Variable variable = area.getModuleVar(moduleName, varName);
+        Slots slots = area.moduleVarSlots(moduleName);
+        int id = variable.getOffset();
+        Type type = variable.getType();
+        setValByType(type, slots, registers, id, tR.getIdx());
+    }
+
+    private void putModuleVar(Instruction ins) {
+        Register valR = ins.getRegOperand(0);
+        Offset offset1 = ins.getOffsetOperand(1);
+        Offset offset2 = ins.getOffsetOperand(2);
+        String moduleName = area.getStrConstByIdx(offset1.getOffset());
+        String varName = area.getStrConstByIdx(offset2.getOffset());
+        Variable variable = area.getModuleVar(moduleName, varName);
+        Slots slots = area.moduleVarSlots(moduleName);
+        int id = variable.getOffset();
+        Type type = variable.getType();
+        setValByType(type, registers, slots, valR.getIdx(), id);
     }
 
     private void getStaticField(Instruction ins) {

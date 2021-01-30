@@ -89,13 +89,17 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             Object rtn = visitVariableInitializer(ast.variableInitializer());
             Symbol s = at.symbolOfNode.get(ast.identifier());
             if (s instanceof Variable) {
-                Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
-                if (!variableMap.containsKey(s)) {
-                    variableMap.put((Variable) s, variable);
+                if (((Variable) s).isModuleVar()) {
+                    processModuleVarAssign(s, (Symbol) rtn);
+                } else {
+                    Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
+                    if (!variableMap.containsKey(s)) {
+                        variableMap.put((Variable) s, variable);
+                    }
+                    s = variableMap.get(s);
+                    TACInstruction instruction = new TACInstruction(TACType.ASSIGN, s, rtn, null, "=");
+                    program.add(instruction);
                 }
-                s = variableMap.get(s);
-                TACInstruction instruction = new TACInstruction(TACType.ASSIGN, (Variable) s, rtn, null, "=");
-                program.add(instruction);
             }
         }
         return super.visitVariableDeclarator(ast);
@@ -201,7 +205,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             switch (ast.getToken().getTokenType()) {
                 case BANG:
                     symbol = getScope(ast).createTempVariable(PrimitiveType.Integer);
-                    TACInstruction tac = new TACInstruction(TACType.ASSIGN, (Variable) symbol,
+                    TACInstruction tac = new TACInstruction(TACType.ASSIGN, symbol,
                             new Constant(PrimitiveType.Integer, 0), right, "^");
                     program.add(tac);
                     break;
@@ -222,16 +226,19 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             } else { // 普通成员(属于对象)
                 Function function = at.enclosingFunctionOfNode(ast);
                 Variable thisV = variableMap.get(function.getVariables().get(0));
-                if (!(ast.getParent() instanceof Expr) || !((Expr) ast.getParent()).isAssignExpr()) {
-                    TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
-                    program.add(fieldTAC);
-                    if (ast.getParent().getToken().isAssignOperator()) {
-                        tmpFieldData.offer((Variable) s);
-                    }
-                } else { // 成员直接赋值
+                boolean isLeftChild = ast.getParent() instanceof Expr
+                        && ast.leftChild() == ast;
+                if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
                     return s;
                 }
+                TACInstruction fieldTAC = genGetField((Variable) symbol, thisV, s);
+                program.add(fieldTAC);
+                if (ast.getParent().getToken().isAssignOperator()) {
+                    tmpFieldData.offer((Variable) s);
+                }
             }
+        } else if (((Variable) s).isModuleVar()){
+            return processModuleVar(ast, (Variable) s);
         } else {
             if (!variableMap.containsKey(s)) {
                 Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
@@ -246,6 +253,23 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Variable result = getScope(ast).createTempVariable(function);
         TACInstruction newFuncObjTAC = genNewFuncObj(result, function);
         program.add(newFuncObjTAC);
+        return result;
+    }
+
+    private Symbol processModuleVar(Expr ast, Variable moduleVar) {
+        Scope scope = getScope(ast);
+        boolean isLeftChild = ast.getParent() instanceof Expr
+                && ast.leftChild() == ast;
+        if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
+            return moduleVar;
+        }
+        Variable result = scope.createTempVariable(moduleVar.getType());
+        NameSpace module = (NameSpace) result.getEnclosingScope();
+        TACInstruction getModuleVarTAC = genGetModuleVar(result, module, moduleVar);
+        program.add(getModuleVarTAC);
+        if (ast.getParent().getToken().isAssignOperator()) {
+            tmpFieldData.offer(moduleVar);
+        }
         return result;
     }
 
@@ -287,6 +311,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 result = (Variable) left;
                 if (result.isClassMember()) {
                     processClassMemberAssign(ast, result, (Symbol) right);
+                } else if (result.isModuleVar()) {
+                    processModuleVarAssign(result, (Symbol) right);
                 } else {
                     instruction = new TACInstruction(TACType.ASSIGN, result, right, null, "=");
                     if (tmpIdxData.size() > 0) {
@@ -354,8 +380,9 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             variableMap.put((Variable) result, (Variable) result);
         } else {
             Variable variable = (Variable) at.symbolOfNode.get(ast);
-            if (ast.getParent() instanceof Expr
-                    && ((Expr)ast.getParent()).isAssignExpr()) { // xx.xx = xx
+            boolean isLeftChild = ast.getParent() instanceof Expr
+                    && ((Expr) ast.getParent()).leftChild() == ast;
+            if (isLeftChild && ((Expr)ast.getParent()).isAssignExpr()) { // xx.xx = xx
                 return variable;
             }
             result = scope.createTempVariable(at.typeOfNode.get(ast));
@@ -394,6 +421,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             TACInstruction fieldTAC = genPutField(thisV, left, right);
             program.add(fieldTAC);
         }
+    }
+
+    private void processModuleVarAssign(Symbol moduleVar, Symbol val) {
+        NameSpace module = (NameSpace) moduleVar.getEnclosingScope();
+        TACInstruction moduleVarTAC = genPutModuleVar(module, (Variable) moduleVar, val);
+        program.add(moduleVarTAC);
     }
 
     private Variable getVariable(Scope scope, Variable variable) {
@@ -819,8 +852,14 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             instruction = new TACInstruction(TACType.ASSIGN, (Variable) lastLeft, tmpIdxData.poll(), tmpResult, "=");
             instruction.setArrayAssign(true);
         } else {
-            if (tmpFieldData.size() > 0) {
-                processClassMemberAssign(ast, Objects.requireNonNull(tmpFieldData.poll()), tmpResult);
+            if (!tmpFieldData.isEmpty()) {
+                Variable variable = tmpFieldData.poll();
+                assert variable != null;
+                if (variable.isModuleVar()) {
+                    processModuleVarAssign(variable, tmpResult);
+                } else {
+                    processClassMemberAssign(ast, variable, tmpResult);
+                }
                 return null;
             } else {
                 instruction = new TACInstruction(TACType.ASSIGN, (Variable) left, tmpResult, null, "=");
@@ -897,12 +936,28 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return new TACInstruction(TACType.PUT_FIELD, ref, field, val, null);
     }
 
+    private TACInstruction genGetUpValueVar(Variable result, Object arg1, Object arg2) {
+        return new TACInstruction(TACType.GET_UPVALUE_VAR, result, arg1, arg2, null);
+    }
+
+    private TACInstruction genPutUpValueVar(Variable ref, Object field, Object val) {
+        return new TACInstruction(TACType.PUT_UPVALUE_VAR, ref, field, val, null);
+    }
+
     private TACInstruction genGetStaticField(Variable variable, Object arg1, Object arg2) {
         return new TACInstruction(TACType.GET_STATIC_FIELD, variable, arg1, arg2, null);
     }
 
     private TACInstruction genPutStaticField(Object clazz, Variable field, Object val) {
         return new TACInstruction(TACType.PUT_STATIC_FIELD, (Symbol) val, clazz, field, null);
+    }
+
+    private TACInstruction genGetModuleVar(Variable variable, Object module, Object arg2) {
+        return new TACInstruction(TACType.GET_MODULE_VAR, variable, module, arg2, null);
+    }
+
+    private TACInstruction genPutModuleVar(Object module, Variable field, Object val) {
+        return new TACInstruction(TACType.PUT_MODULE_VAR, (Symbol) val, module, field, null);
     }
 
     private TACInstruction genPrint() {

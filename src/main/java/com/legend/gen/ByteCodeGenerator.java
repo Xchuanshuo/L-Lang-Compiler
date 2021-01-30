@@ -1,6 +1,7 @@
 package com.legend.gen;
 
 import com.legend.common.MetadataArea;
+import com.legend.exception.GeneratorException;
 import com.legend.gen.operand.ImmediateNumber;
 import com.legend.gen.operand.Label;
 import com.legend.gen.operand.Offset;
@@ -87,6 +88,12 @@ public class ByteCodeGenerator {
                 case PUT_STATIC_FIELD:
                     genPutStaticField(tac);
                     break;
+                case GET_MODULE_VAR:
+                    genGetModuleVar(tac);
+                    break;
+                case PUT_MODULE_VAR:
+                    genPutModuleVar(tac);
+                    break;
                 case ARG:
                     emitPush((Symbol) tac.getArg1());
                     break;
@@ -118,6 +125,9 @@ public class ByteCodeGenerator {
                 case RETURN:
                     genReturn(tac);
                     break;
+                default:
+                    throw new GeneratorException("Not exist implements for " +
+                            "tac of [" + tac.getType() + "]!");
             }
         }
         relocation(labelToPosMap, program.getInstructions());
@@ -270,6 +280,22 @@ public class ByteCodeGenerator {
         Constant fieldConst = (Constant) tac.getArg2();
         emitLoad(val, Register.R1);
         emitPutStaticField(Register.R1, classConst, fieldConst);
+    }
+
+    private void genGetModuleVar(TACInstruction tac) {
+        Variable res = tac.getResultVar();
+        Constant moduleConst = (Constant) tac.getArg1();
+        Constant fieldConst = (Constant) tac.getArg2();
+        emitGetModuleVar(moduleConst, fieldConst, Register.R1);
+        emitStore(Register.R1, res);
+    }
+
+    private void genPutModuleVar(TACInstruction tac) {
+        Symbol val = tac.getResult();
+        Constant moduleVar = (Constant) tac.getArg1();
+        Constant fieldConst = (Constant) tac.getArg2();
+        emitLoad(val, Register.R1);
+        emitPutModuleVar(Register.R1, moduleVar, fieldConst);
     }
 
     private void genGetStaticField(TACInstruction tac) {
@@ -780,6 +806,19 @@ public class ByteCodeGenerator {
     private void emitPutStaticField(Register valR, Constant classConst, Constant fieldConst) {
         program.addIns(Instruction.offset4(OpCode.PUT_S_FIELD, valR,
                 new Offset(classConst.getOffset()),
+                new Offset(fieldConst.getOffset())));
+    }
+
+    private void emitGetModuleVar(Constant moduleConst, Constant fieldConst, Register dest) {
+        program.addIns(Instruction.offset3(OpCode.GET_MODULE_VAR,
+                new Offset(moduleConst.getOffset()),
+                new Offset(fieldConst.getOffset()), dest));
+    }
+
+
+    private void emitPutModuleVar(Register valR, Constant moduleConst, Constant fieldConst) {
+        program.addIns(Instruction.offset4(OpCode.PUT_MODULE_VAR, valR,
+                new Offset(moduleConst.getOffset()),
                 new Offset(fieldConst.getOffset())));
     }
 

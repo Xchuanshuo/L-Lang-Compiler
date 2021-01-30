@@ -56,7 +56,9 @@ public class ClosureAnalyzer {
         ASTNode ast = scope.getAstNode();
         for (ASTNode node: at.symbolOfNode.keySet()) {
             Symbol symbol = at.symbolOfNode.get(node);
-            if (symbol instanceof Variable && isAncestor(ast, node)) {
+            if (symbol instanceof Variable && !((Variable) symbol).isModuleVar()
+                    && isAncestor(ast, node)) {
+                ((Variable) symbol).setUpValue(true);
                 set.add((Variable) symbol);
             }
         }

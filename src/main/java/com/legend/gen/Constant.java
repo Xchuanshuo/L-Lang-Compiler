@@ -65,6 +65,10 @@ public class Constant {
     public static final byte GET_S_FIELD = 0x63;
     public static final byte PUT_FIELD = 0x64;
     public static final byte PUT_S_FIELD = 0x65;
+    public static final byte GET_MODULE_VAR = 0x66;
+    public static final byte PUT_MODULE_VAR = 0x67;
+    public static final byte GET_UPVALUE_VAR = 0x68;
+    public static final byte PUT_UPVALUE_VAR = 0x69;
 
     // 函数调用相关
     public static final byte INVOKE_VIRTUAL = 0x70;
