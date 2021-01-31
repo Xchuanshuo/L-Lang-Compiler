@@ -1,6 +1,7 @@
 package com.legend.ir;
 
 import com.legend.common.BuiltInFunction;
+import com.legend.exception.GeneratorException;
 import com.legend.interpreter.NullObject;
 import com.legend.parser.Program;
 import com.legend.parser.ast.*;
@@ -125,8 +126,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         program.add(startLabel);
         program.addFunction(startLabel, function);
         if (function.getEnclosingScope() instanceof Class
-                && !function.isStatic()) {
-            // 对象实例方法的第一个参数为this引用
+                && !function.isStatic() && !function.isInitMethod()) {
+            // 对象实例方法的第一个参数为this引用 init方法在语义分析阶段已经处理
             function.getVariables().add(0, ((Class)
                     function.getEnclosingScope()).getThis());
         }
@@ -433,6 +434,16 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return result;
     }
 
+    private Variable getClassMember(Expr ast, Symbol field) {
+        Scope scope = getScope(ast);
+        Variable tmpRes = scope.createTempVariable(((Variable) field).getType());
+        Function caller = at.enclosingFunctionOfNode(ast);
+        if (caller == null) return null;
+        Variable thisV = variableMap.get(caller.getVariables().get(0));
+        genGetField(tmpRes, thisV, field);
+        return tmpRes;
+    }
+
     private void processClassMemberAssign(Expr ast, Symbol left, Symbol right) {
         if (left.isStatic()) { // 静态成员赋值
             Class theClass = (Class) left.getEnclosingScope();
@@ -462,14 +473,6 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         genPutModuleVar(module, (Variable) moduleVar, val);
     }
 
-    private Variable getVariable(Scope scope, Variable variable) {
-        if (!variableMap.containsKey(variable)) {
-            Variable tmp = scope.createTempVariable(variable.getType());
-            variableMap.put(variable, tmp);
-        }
-        return variableMap.get(variable);
-    }
-
     @Override
     public Symbol visitFunctionCall(FunctionCall ast) {
         Scope scope = getScope(ast);
@@ -478,6 +481,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             Variable funcVar;
             if (((Variable) symbol).isModuleVar()) {
                 funcVar = (Variable) processModuleVar(ast, (Variable) symbol);
+            } else if (((Variable) symbol).isClassMember()){
+                funcVar = getClassMember(ast, symbol);
             } else {
                 funcVar = variableMap.get(symbol);
             }
@@ -530,6 +535,10 @@ public class TACGenerator extends BaseASTVisitor<Object> {
     }
 
     private void genInvokeInit(Variable classObj, Class theClass) {
+        Function initMethod = theClass.getInitMethod();
+        if (initMethod == null) {
+            throw new GeneratorException("The _init_() method no exist in class [" + theClass + "]!");
+        }
         TACInstruction initInvokeTAC = genInvokeSpecial(classObj, classObj, theClass.getInitMethod());
         program.add(genArg(classObj));
         program.add(initInvokeTAC);

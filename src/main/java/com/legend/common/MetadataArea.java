@@ -225,8 +225,9 @@ public class MetadataArea {
         String className = clazz.toString().replace("null_", "");
         Function function = getFunctionByIdx(idx);
         String signature = getFunctionSignature(function);
+        String tmp = signature.substring(0, signature.lastIndexOf("("));
         String newFuncName = className + signature.substring(
-                signature.lastIndexOf("_"), signature.length());
+                tmp.lastIndexOf("_"), signature.length());
         if (funcNameToPositionMap.containsKey(newFuncName)) {
             return funcNameToPositionMap.get(newFuncName);
         } else if (clazz.getParentClass() != null) {

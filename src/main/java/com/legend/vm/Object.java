@@ -29,6 +29,10 @@ public class Object {
         this.data = data;
     }
 
+    public java.lang.Object getData() {
+        return data;
+    }
+
     public void copyAndSet(Slots newSlots) {
         Slots oldSlots = (Slots) data;
         if (oldSlots.getSize() > newSlots.getSize()) {

@@ -110,6 +110,10 @@ public class TypeAndScopeScanner extends BaseASTListener {
         // 初次扫描函数信息不完整 后续扫描进行补充
         Function function = new Function(name, currentScope(), ast);
         function.setStatic(ast.STATIC() != null);
+        if (function.isInitMethod()) {
+            Class theClass = (Class) function.getEnclosingScope();
+            function.getVariables().add(theClass.getThis());
+        }
         at.types.add(function);
         at.symbolOfNode.put(ast, function);
         if (currentScope() instanceof Class && function.isStatic()) {
@@ -123,10 +127,6 @@ public class TypeAndScopeScanner extends BaseASTListener {
     @Override
     public void exitFunctionDeclaration(FunctionDeclaration ast) {
         popScope();
-    }
-
-    public static void test() {
-
     }
 
     @Override

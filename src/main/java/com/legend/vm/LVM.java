@@ -549,6 +549,9 @@ public class LVM {
 
     private void packageClassClosure(Object classObjRef) {
         Class clazz = classObjRef.clazz();
+        if (!(classObjRef.getData() instanceof Slots)) {
+            return;
+        }
         Slots slots = classObjRef.fieldSlots();
         int maxSize = 0;
         for (Variable field : clazz.fields()) {
