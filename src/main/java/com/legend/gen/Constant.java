@@ -75,7 +75,7 @@ public class Constant {
     public static final byte INVOKE_SPECIAL = 0x71;
     public static final byte INVOKE_STATIC = 0x72;
     public static final byte INVOKE_VAR_FUNC = 0x73;
-    public static final byte GET_FUNC_LOCALS = 0x74;
+    public static final byte GET_PARAM_COUNT = 0x74;
     // 返回
     public static final byte RET = 0x76;
 

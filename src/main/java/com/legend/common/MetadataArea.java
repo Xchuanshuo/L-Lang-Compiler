@@ -63,8 +63,21 @@ public class MetadataArea {
         }
         Variable variable = nameSpace.findModuleVar(varName);
         if (variable == null) {
-            throw new RuntimeException("No exist a variable of "
-                    + varName + " in class [" + moduleName + "]");
+            throw new RuntimeException("No exist a variable "
+                    + varName + " in module [" + moduleName + "]");
+        }
+        return variable;
+    }
+
+    public Variable getUpValueVar(String funcName, String varName) {
+        Function function = (Function) typeMap.get(funcName);
+        if (function == null) {
+            throw new RuntimeException("No exist a module name of " + funcName);
+        }
+        Variable variable = function.findUpValueVar(varName);
+        if (variable == null) {
+            throw new RuntimeException("No exist a variable "
+                    + varName + " in closures [" + funcName + "]");
         }
         return variable;
     }
@@ -293,6 +306,7 @@ public class MetadataArea {
             }
             fillClassField(area, instruction);
             fillModule(area, instruction);
+            fillUpValueVar(area, instruction);
         }
     }
 
@@ -304,6 +318,15 @@ public class MetadataArea {
             Constant constant2 = new Constant(PrimitiveType.String, tac.getArg2());
             area.addConstant(constant2);
             tac.setArg2(constant2);
+        }
+    }
+
+    private void fillUpValueVar(MetadataArea area, TACInstruction tac) {
+        if (tac.getType() == TACType.GET_UPVALUE_VAR ||
+                tac.getType() == TACType.PUT_UPVALUE_VAR) {
+            Constant constant = new Constant(PrimitiveType.String, tac.getArg1());
+            area.addConstant(constant);
+            tac.setArg1(constant);
         }
     }
 

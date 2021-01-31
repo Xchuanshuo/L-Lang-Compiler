@@ -44,6 +44,7 @@ public class ClosureAnalyzer {
         for (Symbol symbol : scope.getSymbols()) {
             if (symbol instanceof Variable) {
                 set.add((Variable) symbol);
+                ((Variable) symbol).setUpValue(false);
             } else if (symbol instanceof Scope) {
                 set.addAll(variableDeclareUnderScope((Scope) symbol));
             }

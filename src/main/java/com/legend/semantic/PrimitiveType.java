@@ -84,15 +84,15 @@ public class PrimitiveType implements Type {
 
     public static Type getBaseTypeByText(String text) {
         Type type = PrimitiveType.Null;
-        if (Keyword.getValueByKey(INT).equals(text)) {
+        if (Keyword.isMatchKey(INT, text)) {
             type = PrimitiveType.Integer;
-        } else if (Keyword.getValueByKey(FLOAT).equals(text)) {
+        } else if (Keyword.isMatchKey(FLOAT, text)) {
             type = PrimitiveType.Float;
-        } else if (Keyword.getValueByKey(CHAR).equals(text)) {
+        } else if (Keyword.isMatchKey(CHAR, text)) {
             type = PrimitiveType.Char;
-        } else if (Keyword.getValueByKey(STRING).equals(text)) {
+        } else if (Keyword.isMatchKey(STRING, text)) {
             type = PrimitiveType.String;
-        } else if (Keyword.getValueByKey(BOOLEAN).equals(text)) {
+        } else if (Keyword.isMatchKey(BOOLEAN, text)) {
             type = PrimitiveType.Boolean;
         }
         return type;

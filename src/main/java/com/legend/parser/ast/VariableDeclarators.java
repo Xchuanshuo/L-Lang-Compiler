@@ -35,7 +35,7 @@ public class VariableDeclarators extends ASTNode {
     }
 
     public TerminalNode STATIC() {
-        return getTerminalNode(Keyword.getValueByKey(Keyword.Key.STATIC));
+        return getTerminalNode(Keyword.Key.STATIC);
     }
 
     public TypeType typeType() {

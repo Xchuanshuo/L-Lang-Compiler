@@ -25,7 +25,7 @@ public class BlockStatement extends ASTNode {
         if (!it.hasNext()) return null;
         BlockStatement blockStatement = new BlockStatement();
         String text = it.peek().getText();
-        if (text.equals(Keyword.getValueByKey(CLASS))) { // 类声明
+        if (Keyword.isMatchKey(CLASS, text)) { // 类声明
             ASTNode classDeclaration = ClassDeclaration.parse(it);
             blockStatement.addChild(classDeclaration);
         } else if (isFuncDeclaration(it)) { // 函数声明

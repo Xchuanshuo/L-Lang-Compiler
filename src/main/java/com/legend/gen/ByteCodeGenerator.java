@@ -94,6 +94,12 @@ public class ByteCodeGenerator {
                 case PUT_MODULE_VAR:
                     genPutModuleVar(tac);
                     break;
+                case GET_UPVALUE_VAR:
+                    genGetUpValueVar(tac);
+                    break;
+                case PUT_UPVALUE_VAR:
+                    genPutUpValueVar(tac);
+                    break;
                 case ARG:
                     emitPush((Symbol) tac.getArg1());
                     break;
@@ -296,6 +302,20 @@ public class ByteCodeGenerator {
         Constant fieldConst = (Constant) tac.getArg2();
         emitLoad(val, Register.R1);
         emitPutModuleVar(Register.R1, moduleVar, fieldConst);
+    }
+
+    private void genGetUpValueVar(TACInstruction tac) {
+        Variable res = tac.getResultVar();
+        Constant varConst = (Constant) tac.getArg1();
+        emitGetUpValueVar(varConst, Register.R1);
+        emitStore(Register.R1, res);
+    }
+
+    private void genPutUpValueVar(TACInstruction tac) {
+        Symbol val = tac.getResult();
+        Constant varConst = (Constant) tac.getArg1();
+        emitLoad(val, Register.R1);
+        emitPutUpValueVar(Register.R1, varConst);
     }
 
     private void genGetStaticField(TACInstruction tac) {
@@ -822,6 +842,15 @@ public class ByteCodeGenerator {
                 new Offset(fieldConst.getOffset())));
     }
 
+    private void emitPutUpValueVar(Register valR, Constant varConst) {
+        program.addIns(Instruction.offset5(OpCode.PUT_UPVALUE_VAR, valR, new Offset(varConst.getOffset())));
+    }
+
+    private void emitGetUpValueVar(Constant varConst, Register dest) {
+        program.addIns(Instruction.offset3(OpCode.GET_UPVALUE_VAR,
+                new Offset(varConst.getOffset()), new Offset(0), dest));
+    }
+
     private void emitInvokeVirtual(Register obj, Constant methodIdx) {
         program.addIns(Instruction.offset2(OpCode.INVOKE_VIRTUAL,
                 obj, Register.SP, new Offset(methodIdx.getOffset())));
@@ -875,7 +904,7 @@ public class ByteCodeGenerator {
     }
 
     private void emitPrint(Register r1, int offset) {
-        program.addIns(Instruction.offset5(r1, new Offset(offset)));
+        program.addIns(Instruction.print(r1, new Offset(offset)));
     }
 
     private void emitMove(Register src, Register dest) {

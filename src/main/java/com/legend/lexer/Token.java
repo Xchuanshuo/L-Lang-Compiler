@@ -63,19 +63,19 @@ public class Token {
         if (tokenType != TokenType.KEYWORD) {
             return false;
         }
-        return getText().equals(Keyword.getValueByKey(INT)) ||
-                getText().equals(Keyword.getValueByKey(FLOAT)) ||
-                getText().equals(Keyword.getValueByKey(CHAR)) ||
-                getText().equals(Keyword.getValueByKey(STRING)) ||
-                getText().equals(Keyword.getValueByKey(BOOLEAN));
+        return Keyword.isMatchKey(INT, getText()) ||
+                Keyword.isMatchKey(FLOAT, getText()) ||
+                Keyword.isMatchKey(CHAR, getText()) ||
+                Keyword.isMatchKey(STRING, getText()) ||
+                Keyword.isMatchKey(BOOLEAN, getText());
     }
 
     public boolean isThisOrSuper() {
         if (tokenType != TokenType.KEYWORD) {
             return false;
         }
-        return getText().equals(Keyword.getValueByKey(THIS)) ||
-                getText().equals(Keyword.getValueByKey(SUPER));
+        return Keyword.isMatchKey(THIS, getText()) ||
+                Keyword.isMatchKey(SUPER, getText());
     }
 
     public boolean isLiteral() {

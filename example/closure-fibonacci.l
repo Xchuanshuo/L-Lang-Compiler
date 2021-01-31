@@ -15,7 +15,7 @@ function int() fun(){
 
 function int() fib = fun()
 // 打印斐波那契数列，在闭包里记住了相邻两次计算的结果
-for (int i = 0;i < 80;i += 1){
+for (int i = 0;i < 40;i += 1){
     println(fib())
 }
 

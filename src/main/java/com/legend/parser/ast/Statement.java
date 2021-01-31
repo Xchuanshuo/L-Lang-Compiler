@@ -28,23 +28,23 @@ public class Statement extends ASTNode {
         if (text.equals("{")) {
             ASTNode block = Block.parse(it);
             statement.addChild(block);
-        } else if (text.equals(Keyword.getValueByKey(IF))) {
+        } else if (Keyword.isMatchKey(IF, text)) {
             parseIfStmt(statement, it);
-        } else if (text.equals(Keyword.getValueByKey(FOR))) {
+        } else if (Keyword.isMatchKey(FOR, text)) {
             parseForStmt(statement, it);
-        } else if (text.equals(Keyword.getValueByKey(WHILE))) {
+        } else if (Keyword.isMatchKey(WHILE, text)) {
             parseWhileStmt(statement, it);
-        } else if (text.equals(Keyword.getValueByKey(SWITCH))) {
+        } else if (Keyword.isMatchKey(SWITCH, text)) {
             // todo
-        } else if (text.equals(Keyword.getValueByKey(RETURN))) {
+        } else if (Keyword.isMatchKey(RETURN, text)) {
             parseReturnStmt(statement, it);
-        } else if (text.equals(Keyword.getValueByKey(BREAK))) {
+        } else if (Keyword.isMatchKey(BREAK, text)) {
             TerminalNode breakNode = new TerminalNode(it.nextMatch(BREAK));
             statement.addChild(breakNode);
             if (it.topIsEqual(TokenType.SEMICOLON)) {
                 it.nextMatch(TokenType.SEMICOLON);
             }
-        } else if (text.equals(Keyword.getValueByKey(CONTINUE))) {
+        } else if (Keyword.isMatchKey(CONTINUE, text)) {
             TerminalNode returnNode = new TerminalNode(it.nextMatch(CONTINUE));
             statement.addChild(returnNode);
             if (it.topIsEqual(TokenType.SEMICOLON)) {
@@ -76,8 +76,7 @@ public class Statement extends ASTNode {
         if (it.topIsEqual(TokenType.SEMICOLON)) {
             it.nextMatch(TokenType.SEMICOLON);
         }
-        if (it.hasNext() && it.peek().getText().
-                equals(Keyword.getValueByKey(ELSE))) {
+        if (it.hasNext() && Keyword.isMatchKey(ELSE, it.peek().getText())) {
             TerminalNode elseNode = new TerminalNode(it.nextMatch(ELSE));
             statement.addChild(elseNode);
 
@@ -123,35 +122,35 @@ public class Statement extends ASTNode {
     }
 
     public TerminalNode IF() {
-        return getTerminalNode(Keyword.getValueByKey(IF));
+        return getTerminalNode(IF);
     }
 
     public TerminalNode ELSE() {
-        return getTerminalNode(Keyword.getValueByKey(ELSE));
+        return getTerminalNode(ELSE);
     }
 
     public TerminalNode FOR() {
-        return getTerminalNode(Keyword.getValueByKey(FOR));
+        return getTerminalNode(FOR);
     }
 
     public TerminalNode WHILE() {
-        return getTerminalNode(Keyword.getValueByKey(WHILE));
+        return getTerminalNode(WHILE);
     }
 
     public TerminalNode SWITCH() {
-        return getTerminalNode(Keyword.getValueByKey(SWITCH));
+        return getTerminalNode(SWITCH);
     }
 
     public TerminalNode RETURN() {
-        return getTerminalNode(Keyword.getValueByKey(RETURN));
+        return getTerminalNode(RETURN);
     }
 
     public TerminalNode BREAK() {
-        return getTerminalNode(Keyword.getValueByKey(BREAK));
+        return getTerminalNode(BREAK);
     }
 
     public TerminalNode CONTINUE() {
-        return getTerminalNode(Keyword.getValueByKey(CONTINUE));
+        return getTerminalNode(CONTINUE);
     }
 
     public Block block() {

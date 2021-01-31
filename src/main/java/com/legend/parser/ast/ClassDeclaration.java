@@ -64,11 +64,11 @@ public class ClassDeclaration extends ASTNode {
     }
 
     public TerminalNode EXTENDS() {
-        return getTerminalNode(Keyword.getValueByKey(EXTENDS));
+        return getTerminalNode(EXTENDS);
     }
 
     public TerminalNode IMPLEMENTS() {
-        return getTerminalNode(Keyword.getValueByKey(IMPLEMENTS));
+        return getTerminalNode(IMPLEMENTS);
     }
 
     public TypeType typeType() {

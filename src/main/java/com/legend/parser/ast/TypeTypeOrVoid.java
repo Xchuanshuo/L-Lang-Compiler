@@ -21,7 +21,7 @@ public class TypeTypeOrVoid extends ASTNode {
     public static ASTNode parse(PeekTokenIterator it) throws ParseException {
         TypeTypeOrVoid typeTypeOrVoid = new TypeTypeOrVoid();
         Token token = it.peek();
-        if (token.getText().equals(Keyword.getValueByKey(VOID))) {
+        if (Keyword.isMatchKey(VOID, token.getText())) {
             it.next();
             typeTypeOrVoid.addChild(new TerminalNode(token));
         } else {
@@ -35,7 +35,7 @@ public class TypeTypeOrVoid extends ASTNode {
     }
 
     public TerminalNode VOID() {
-        return getTerminalNode(Keyword.getValueByKey(VOID));
+        return getTerminalNode(VOID);
     }
 
     public TypeType typeType() {

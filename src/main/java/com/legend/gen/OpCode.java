@@ -86,12 +86,14 @@ public class OpCode {
     public static final OpCode PUT_S_FIELD = new OpCode(Constant.PUT_S_FIELD, "PUT_S_FIELD", OFFSET4);
     public static final OpCode GET_MODULE_VAR = new OpCode(Constant.GET_MODULE_VAR, "GET_MODULE_VAR", OFFSET3);
     public static final OpCode PUT_MODULE_VAR = new OpCode(Constant.PUT_MODULE_VAR, "PUT_MODULE_VAR", OFFSET4);
+    public static final OpCode GET_UPVALUE_VAR = new OpCode(Constant.GET_UPVALUE_VAR, "GET_UPVALUE_VAR", OFFSET3);
+    public static final OpCode PUT_UPVALUE_VAR = new OpCode(Constant.PUT_UPVALUE_VAR, "PUT_UPVALUE_VAR", OFFSET5);
 
     public static final OpCode INVOKE_VIRTUAL = new OpCode(Constant.INVOKE_VIRTUAL, "INVOKE_VIRTUAL", OFFSET2);
     public static final OpCode INVOKE_SPECIAL = new OpCode(Constant.INVOKE_SPECIAL, "INVOKE_SPECIAL", OFFSET2);
     public static final OpCode INVOKE_STATIC = new OpCode(Constant.INVOKE_STATIC, "INVOKE_STATIC", OFFSET4);
     public static final OpCode INVOKE_VAR_FUNC = new OpCode(Constant.INVOKE_VAR_FUNC, "INVOKE_VAR_FUNC", REGISTER1);
-    public static final OpCode GET_FUNC_LOCALS = new OpCode(Constant.GET_FUNC_LOCALS, "GET_FUNC_LOCALS", REGISTER1);
+    public static final OpCode GET_FUNC_LOCALS = new OpCode(Constant.GET_PARAM_COUNT, "GET_PARAM_COUNT", REGISTER1);
 
     public static final OpCode I2F = new OpCode(Constant.I2F, "I2F", REGISTER1);
     public static final OpCode I2B = new OpCode(Constant.I2B, "I2B", REGISTER1);

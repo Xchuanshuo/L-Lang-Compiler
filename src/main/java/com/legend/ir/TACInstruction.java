@@ -170,9 +170,9 @@ public class TACInstruction {
             case PUT_MODULE_VAR:
                 return String.format("%s PUT_MODULE_VAR %s %s", arg1, arg2, result);
             case GET_UPVALUE_VAR:
-                return String.format("%s = %s GET_UPVALUE_VAR %s", result, arg1, arg2);
+                return String.format("%s = GET_UPVALUE_VAR %s", result, arg1);
             case PUT_UPVALUE_VAR:
-                return String.format("%s = %s PUT_UPVALUE_VAR %s", result, arg1, arg2);
+                return String.format("PUT_UPVALUE_VAR %s %s", arg1, result);
         }
         throw new InterpreterException("Unknown opcode type:" + type);
     }

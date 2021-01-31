@@ -5,7 +5,7 @@
 int a = 0;
 
 function int() fun1(){
-    int b = 0;                //函数内的局部变量
+    int b = 1                 //函数内的局部变量
 
     int inner(){              //内部的一个函数
         a = a+1;

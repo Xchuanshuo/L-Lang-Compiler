@@ -1,7 +1,5 @@
 package com.legend.gen.operand;
 
-import com.legend.ir.Constant;
-
 /**
  * @author Legend
  * @data by on 20-9-11.

@@ -27,6 +27,7 @@ public class Register extends Operand {
     public static final Register CONSTANT = new Register("CONSTANT", (byte) 5);
     public static final Register RA = new Register("RA", (byte) 7);
     public static final Register RV = new Register("RV", (byte) 8);
+    public static final Register UP = new Register("UP", (byte) 9);
 
     public static final Register R1 = new Register("r1", (byte) 10);
     public static final Register R2 = new Register("r2", (byte) 11);

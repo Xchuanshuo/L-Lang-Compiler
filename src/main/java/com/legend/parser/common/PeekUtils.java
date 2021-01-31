@@ -23,7 +23,7 @@ public class PeekUtils {
         if (it.topIsEqual(STATIC)) {
             it.nextMatch(STATIC);
         }
-        if (it.peek().getText().equals(Keyword.getValueByKey(VOID))) {
+        if (Keyword.isMatchKey(VOID, it.peek().getText())) {
             it.putBackByPosition(pos);
             return true;
         }

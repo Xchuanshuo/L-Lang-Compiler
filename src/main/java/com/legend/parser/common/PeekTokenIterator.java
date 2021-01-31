@@ -63,8 +63,7 @@ public class PeekTokenIterator extends PeekIterator<Token> {
 
     public Token nextMatch(Keyword.Key key) throws ParseException {
         Token token = next();
-        String value = Keyword.getValueByKey(key);
-        if (!token.getText().equals(value)) {
+        if (!Keyword.isMatchKey(key, token.getText())) {
             throw new ParseException(token);
         }
         return token;
@@ -82,8 +81,7 @@ public class PeekTokenIterator extends PeekIterator<Token> {
 
     public boolean topIsEqual(Keyword.Key key) {
         if (!hasNext()) return false;
-        String value = Keyword.getValueByKey(key);
-        return peek().getText().equals(value);
+        return Keyword.isMatchKey(key, peek().getText());
     }
 
     public Token lookahead() {
@@ -111,8 +109,7 @@ public class PeekTokenIterator extends PeekIterator<Token> {
     public boolean aheadIsEqual(Keyword.Key key) {
         Token token = lookahead();
         if (token == null) return false;
-        String value = Keyword.getValueByKey(key);
-        return peek().getText().equals(value);
+        return Keyword.isMatchKey(key, peek().getText());
     }
 
 }

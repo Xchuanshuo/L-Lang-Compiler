@@ -22,7 +22,7 @@ public class Keyword {
         THROW, THROWS, TRY, CATCH, FUNCTION,
     }
 
-    private static String[] keyWordStr = {
+    private static String[] keyWordStr_en = {
             "abstract", "assert", "boolean", "break", "continue",
             "byte", "char", "class", "default", "double", "float",
             "short", "int", "long", "string", "for", "while", "if", "else",
@@ -32,31 +32,52 @@ public class Keyword {
             "throw", "throws", "try", "catch", "function"
     };
 
-//    private static String[] keyWordStr = {
-//            "abstract", "assert", "布尔型", "结束", "continue",
-//            "byte", "字符", "类", "default", "double", "浮点数",
-//            "short", "整数", "long", "字符串", "f循环", "当", "如果", "否则",
-//            "switch", "case", "返回", "is", "继承",
-//            "final", "finally", "implements", "import", "private",
-//            "protected", "public", "无返回值", "静态", "父类", "当前",
-//            "throw", "throws", "try", "catch", "函数"
-//    };
+    private static String[] keyWordStr_zh = {
+            "abstract", "assert", "布尔型", "结束", "continue",
+            "byte", "字符", "类", "default", "double", "浮点数",
+            "short", "整数", "long", "字符串", "f循环", "当", "如果", "否则",
+            "switch", "case", "返回", "is", "继承", "作为",
+            "final", "finally", "implements", "import", "private",
+            "protected", "public", "无返回值", "静态", "父类", "当前",
+            "throw", "throws", "try", "catch", "函数"
+    };
 
 
-    private static Map<Key, String> map = new HashMap<>();
+//    private static Map<Key, String> map = new HashMap<>();
+    private static Map<Key, String[]> map = new HashMap<>();
 
     static {
         for (int i = 0;i < Key.values().length;i++) {
-            map.put(Key.values()[i], keyWordStr[i]);
+            map.put(Key.values()[i], new String[]{keyWordStr_en[i], keyWordStr_zh[i]});
         }
     }
 
     public static String getValueByKey(Key key) {
+        return map.get(key)[0];
+    }
+
+    public static String[] getValuesByKey(Key key) {
         return map.get(key);
     }
 
+    public static boolean isMatchKey(Key k, String t) {
+        String[] keys = map.get(k);
+        for (String key : keys) {
+            if (key.equals(t)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     public static boolean isKeyword(String str) {
-        return map.values().contains(str);
+        Collection<String[]> values = map.values();
+        for (String[] value : values) {
+            if (value[0].equals(str) || value[1].equals(str)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public static boolean isBoolLiteral(String val) {

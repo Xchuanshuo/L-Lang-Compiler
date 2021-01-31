@@ -11,6 +11,7 @@ import com.legend.gen.operand.Register;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
 
+import java.util.Set;
 import java.util.Stack;
 
 import static com.legend.gen.Constant.*;
@@ -250,6 +251,12 @@ public class LVM {
             case PUT_MODULE_VAR:
                 putModuleVar(ins);
                 break;
+            case GET_UPVALUE_VAR:
+                getUpValueVar(ins);
+                break;
+            case PUT_UPVALUE_VAR:
+                putUpValueVar(ins);
+                break;
             case INVOKE_VIRTUAL:
                 invokeVirtual(ins);
                 break;
@@ -262,7 +269,7 @@ public class LVM {
             case INVOKE_VAR_FUNC:
                 invokeVarFunc(ins);
                 break;
-            case GET_FUNC_LOCALS:
+            case GET_PARAM_COUNT:
                 getFuncLocals(ins);
                 break;
             case RET:
@@ -529,9 +536,37 @@ public class LVM {
         } else {
             int address = registers.getInt(r1) + offset.getOffset();
             if (stackMemory.isRef(address)) {
-                registers.setRef(r3, stackMemory.getRef(address));
+                Object ref = stackMemory.getRef(address);
+                if (r3 == Register.RV && ref.type() instanceof Class) {
+                    packageClassClosure(ref);
+                }
+                registers.setRef(r3, ref);
             } else {
                 registers.setInt(r3, stackMemory.getInt(address));
+            }
+        }
+    }
+
+    private void packageClassClosure(Object classObjRef) {
+        Class clazz = classObjRef.clazz();
+        Slots slots = classObjRef.fieldSlots();
+        int maxSize = 0;
+        for (Variable field : clazz.fields()) {
+            if (field.getType() instanceof FunctionType) {
+                Object funcObj = slots.getRef(field.getOffset());
+                if (funcObj != null) {
+                    maxSize = Math.max(funcObj.upValueSlots().getSize(), maxSize);
+                }
+            }
+        }
+        if (maxSize == 0) return;
+        Slots newSlots = new Slots(maxSize + 1);
+        for (Variable field : clazz.fields()) {
+            if (field.getType() instanceof FunctionType) {
+                Object funcObj = slots.getRef(field.getOffset());
+                if (funcObj != null) {
+                    funcObj.copyAndSet(newSlots);
+                }
             }
         }
     }
@@ -711,9 +746,19 @@ public class LVM {
         Offset offset = ins.getOffsetOperand(1);
         Register resultR = ins.getRegOperand(2);
         Function function = area.getFunctionByIdx(offset.getOffset());
+        // 将闭包引用的自由变量打包
         Object ref = new Object(function);
+        Set<Variable> upValues = function.getClosureVariables();
+        if (upValues != null) {
+            Slots upValueSlots = ref.upValueSlots();
+            for (Variable value : upValues) {
+                int address = registers.getInt(Register.BP) - value.getOffset();
+                setValByType(value.getType(), stackMemory, upValueSlots, address, value.getOffset());
+            }
+        }
         registers.setRef(resultR, ref);
     }
+
 
     private void getField(Instruction ins) {
         Register refR = ins.getRegOperand(0);
@@ -770,6 +815,30 @@ public class LVM {
         int id = variable.getOffset();
         Type type = variable.getType();
         setValByType(type, registers, slots, valR.getIdx(), id);
+    }
+
+    private void getUpValueVar(Instruction ins) {
+        Offset offset1 = ins.getOffsetOperand(0);
+        Register tR = ins.getRegOperand(2);
+        Object ref = registers.getRef(Register.UP);
+        String varName = area.getStrConstByIdx(offset1.getOffset());
+        String funcName = area.getFunctionSignature(ref.function());
+        Variable variable = area.getUpValueVar(funcName, varName);
+        int id = variable.getOffset();
+        Type type = variable.getType();
+        setValByType(type, ref.upValueSlots(), registers, id, tR.getIdx());
+    }
+
+    private void putUpValueVar(Instruction ins) {
+        Register valR = ins.getRegOperand(0);
+        Offset offset = ins.getOffsetOperand(1);
+        Object ref = registers.getRef(Register.UP);
+        String varName = area.getStrConstByIdx(offset.getOffset());
+        String funcName = area.getFunctionSignature(ref.function());
+        Variable variable = area.getUpValueVar(funcName, varName);
+        int id = variable.getOffset();
+        Type type = variable.getType();
+        setValByType(type, registers, ref.upValueSlots(), valR.getIdx(), id);
     }
 
     private void getStaticField(Instruction ins) {
@@ -860,13 +929,14 @@ public class LVM {
         Object ref = registers.getRef(ins.getRegOperand(0));
         Function function  = ref.function();
         int methodPos = area.getFunctionPos(function);
+        registers.setRef(Register.UP, ref);
         retAddressStack.push(registers.getInt(Register.PC));
         registers.setInt(Register.PC, methodPos);
     }
 
     private void getFuncLocals(Instruction ins) {
         Object ref = registers.getRef(ins.getRegOperand(0));
-        int localsSize = ref.function().getLocalsSize();
+        int localsSize = ref.function().getVariables().size();
         registers.setInt(ins.getRegOperand(1), localsSize);
     }
 

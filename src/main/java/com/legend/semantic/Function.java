@@ -4,6 +4,7 @@ import com.legend.parser.ast.ASTNode;
 
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 /**
@@ -107,6 +108,28 @@ public class Function extends Scope implements FunctionType {
 
     public Set<Variable> getClosureVariables() {
         return closureVariables;
+    }
+
+    public Variable findUpValueVar(String name) {
+        if (closureVariables == null) {
+            return null;
+        }
+        for (Variable variable : closureVariables) {
+            if (variable.name.equals(name)) {
+                return variable;
+            }
+        }
+        return null;
+    }
+
+    public int getClosureMaxSize() {
+        int size = 0;
+        if (closureVariables != null) {
+            for (Variable variable : closureVariables) {
+                size = Math.max(size, variable.getOffset());
+            }
+        }
+        return size + 1;
     }
 
     @Override

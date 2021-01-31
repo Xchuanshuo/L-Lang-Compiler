@@ -337,10 +337,10 @@ public class RefResolver extends BaseASTListener {
         if (ast.getToken().isThisOrSuper()) {
             Class theClass = at.enclosingClassOfNode(ast);
             if (theClass != null) {
-                if (name.equals(Keyword.getValueByKey(THIS))) {
+                if (Keyword.isMatchKey(THIS, name)) {
                     Variable.This thisRef = theClass.getThis();
                     at.symbolOfNode.put(ast, thisRef);
-                } else if (name.equals(Keyword.getValueByKey(SUPER))) {
+                } else if (Keyword.isMatchKey(SUPER, name)) {
                     Variable.Super superRef = theClass.getSuper();
                     at.symbolOfNode.put(ast, superRef);
                 }
@@ -426,10 +426,10 @@ public class RefResolver extends BaseASTListener {
     @Override
     public void exitFunctionCall(FunctionCall ast) {
         String name = ast.identifier().getText();
-        if (name.equals(Keyword.getValueByKey(THIS))) {
+        if (Keyword.isMatchKey(THIS, name)) {
             thisConstructorList.add(ast);
             return;
-        } else if (name.equals(Keyword.getValueByKey(SUPER))) {
+        } else if (Keyword.isMatchKey(SUPER, name)) {
             superConstructorList.add(ast);
             return;
         } else if (BuiltInFunction.isBuiltInFunc(name)) {
@@ -612,17 +612,17 @@ public class RefResolver extends BaseASTListener {
     private void processBuildInFunction(FunctionCall ast) {
         String name = ast.identifier().getText();
         Type type = null;
-        if (BuiltInFunction.getValueByKey(INT).equals(name)) {
+        if (BuiltInFunction.isMatchKey(INT, name)) {
             type = PrimitiveType.Integer;
-        } else if (BuiltInFunction.getValueByKey(STR).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(STR, name)) {
             type = PrimitiveType.String;
-        } else if (BuiltInFunction.getValueByKey(FLOAT).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(FLOAT, name)) {
             type = PrimitiveType.Float;
-        } else if (BuiltInFunction.getValueByKey(BYTE).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(BYTE, name)) {
             type = PrimitiveType.Integer;
-        } else if (BuiltInFunction.getValueByKey(STR_LEN).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(STR_LEN, name)) {
             type = PrimitiveType.Integer;
-        } else if (BuiltInFunction.getValueByKey(STR_AT).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(STR_AT, name)) {
             type = PrimitiveType.String;
         }
         if (type != null) {

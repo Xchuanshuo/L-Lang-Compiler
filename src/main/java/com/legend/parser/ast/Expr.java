@@ -102,7 +102,7 @@ public class Expr extends ASTNode {
                 it.nextMatch(TokenType.KEYWORD);
                 if (token.isThisOrSuper() && !it.topIsEqual("(")
                         && !it.topIsEqual(".")) {
-                    if (!Keyword.getValueByKey(THIS).equals(token.getText())) {
+                    if (!Keyword.isMatchKey(THIS, token.getText())) {
                         throw new ParseException(token);
                     }
                 }
@@ -191,11 +191,11 @@ public class Expr extends ASTNode {
     }
 
     public TerminalNode THIS() {
-        return getTerminalNode(Keyword.getValueByKey(THIS));
+        return getTerminalNode(THIS);
     }
 
     public TerminalNode SUPER() {
-        return getTerminalNode(Keyword.getValueByKey(SUPER));
+        return getTerminalNode(SUPER);
     }
 
     public String getOperator() {

@@ -79,11 +79,16 @@ public class Instruction {
         return instruction;
     }
 
-    public static Instruction offset5(Register r1, Offset offset) {
-        Instruction instruction = new Instruction(OpCode.PRINT);
+    public static Instruction offset5(OpCode opCode, Register r1,
+                                      Offset offset) {
+        Instruction instruction = new Instruction(opCode);
         instruction.operands.add(r1);
         instruction.operands.add(offset);
         return instruction;
+    }
+
+    public static Instruction print(Register r1, Offset offset) {
+        return offset5(OpCode.PRINT, r1, offset);
     }
 
     public static Instruction decode(ByteCodeReader reader) throws GeneratorException {

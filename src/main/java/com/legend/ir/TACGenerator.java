@@ -94,6 +94,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 } else {
                     Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
                     if (!variableMap.containsKey(s)) {
+                        s.setOffset(variable.getOffset());
                         variableMap.put((Variable) s, variable);
                     }
                     s = variableMap.get(s);
@@ -239,6 +240,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
             }
         } else if (((Variable) s).isModuleVar()){
             return processModuleVar(ast, (Variable) s);
+        } else if (((Variable) s).isUpValue()) {
+            return processUpValue(ast, (Variable) s);
         } else {
             if (!variableMap.containsKey(s)) {
                 Variable variable = getScope(ast).createTempVariable(at.typeOfNode.get(s.getAstNode()));
@@ -269,6 +272,21 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         program.add(getModuleVarTAC);
         if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
             tmpFieldData.offer(moduleVar);
+        }
+        return result;
+    }
+
+    private Symbol processUpValue(Expr ast, Variable upvalue) {
+        Scope scope = getScope(ast);
+        boolean isLeftChild = ast.getParent() instanceof Expr
+                && ((Expr)ast.getParent()).leftChild() == ast;
+        if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
+            return upvalue;
+        }
+        Variable result = scope.createTempVariable(upvalue.getType());
+        genGetUpValueVar(result, upvalue);
+        if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
+            tmpFieldData.offer(upvalue);
         }
         return result;
     }
@@ -313,6 +331,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                     processClassMemberAssign(ast, result, (Symbol) right);
                 } else if (result.isModuleVar()) {
                     processModuleVarAssign(result, (Symbol) right);
+                } else if (result.isUpValue()){
+                    return processUpValueAssign(result, (Symbol)right);
                 } else {
                     instruction = new TACInstruction(TACType.ASSIGN, result, right, null, "=");
                     if (tmpIdxData.size() > 0) {
@@ -368,13 +388,29 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 functionCall = (FunctionCall) ast.leftChild();
             }
             List<Symbol> args = getArgsSymbol(functionCall);
-            Function function = (Function) at.symbolOfNode.get(functionCall);
+            Symbol symbol = at.symbolOfNode.get(functionCall);
+            // 函数可能是函数类型的变量
+            Function function = null;
+            if (symbol instanceof Function) {
+                function = (Function) symbol;
+            }
             if (ast.SUPER() !=null) {
                 result = translateSuperFunCall(scope, function, args);
             } else if (left instanceof Variable) { // 对象实例方法
-                result = translateVirtualMethod(scope, (Variable) left, function, args);
+                if (symbol instanceof Variable) {
+                    Variable tmpRes = scope.createTempVariable(((Variable) symbol).getType());
+                    TACInstruction getFieldTAC = genGetField(tmpRes, left, symbol);
+                    program.add(getFieldTAC);
+                    result = translateVarFunction(scope, tmpRes, args);
+                } else {
+                    result = translateVirtualMethod(scope, (Variable) left, function, args);
+                }
             } else if (left instanceof Class){ // 类(静态)方法
-                result = translateStaticFunction(scope, (Class) left, function, args);
+                if (symbol instanceof Variable) {
+                    result = translateVarFunction(scope, (Variable) symbol, args);
+                } else {
+                    result = translateStaticFunction(scope, (Class) left, function, args);
+                }
             }
             at.symbolOfNode.put(ast, result);
             variableMap.put((Variable) result, (Variable) result);
@@ -423,6 +459,11 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         }
     }
 
+    private Symbol processUpValueAssign(Symbol upvalueVar, Symbol val) {
+        genPutUpValueVar((Variable) upvalueVar, val);
+        return val;
+    }
+
     private void processModuleVarAssign(Symbol moduleVar, Symbol val) {
         NameSpace module = (NameSpace) moduleVar.getEnclosingScope();
         TACInstruction moduleVarTAC = genPutModuleVar(module, (Variable) moduleVar, val);
@@ -442,7 +483,12 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Scope scope = getScope(ast);
         Symbol symbol = at.symbolOfNode.get(ast);
         if (symbol instanceof Variable) { // 函数变量
-            Variable funcVar = variableMap.get(symbol);
+            Variable funcVar;
+            if (((Variable) symbol).isModuleVar()) {
+                funcVar = (Variable) processModuleVar(ast, (Variable) symbol);
+            } else {
+                funcVar = variableMap.get(symbol);
+            }
             return translateVarFunction(scope, funcVar, getArgsSymbol(ast));
         }
         Function function = (Function) symbol;
@@ -939,14 +985,6 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         return new TACInstruction(TACType.PUT_FIELD, ref, field, val, null);
     }
 
-    private TACInstruction genGetUpValueVar(Variable result, Object arg1, Object arg2) {
-        return new TACInstruction(TACType.GET_UPVALUE_VAR, result, arg1, arg2, null);
-    }
-
-    private TACInstruction genPutUpValueVar(Variable ref, Object field, Object val) {
-        return new TACInstruction(TACType.PUT_UPVALUE_VAR, ref, field, val, null);
-    }
-
     private TACInstruction genGetStaticField(Variable variable, Object arg1, Object arg2) {
         return new TACInstruction(TACType.GET_STATIC_FIELD, variable, arg1, arg2, null);
     }
@@ -961,6 +999,14 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private TACInstruction genPutModuleVar(Object module, Variable field, Object val) {
         return new TACInstruction(TACType.PUT_MODULE_VAR, (Symbol) val, module, field, null);
+    }
+
+    private void genGetUpValueVar(Variable result, Object upValueVar) {
+        program.add(new TACInstruction(TACType.GET_UPVALUE_VAR, result, upValueVar, null, null));
+    }
+
+    private void genPutUpValueVar(Variable upValueVar, Symbol val) {
+        program.add(new TACInstruction(TACType.PUT_UPVALUE_VAR, val, upValueVar, null, null));
     }
 
     private TACInstruction genPrint() {
@@ -984,24 +1030,24 @@ public class TACGenerator extends BaseASTVisitor<Object> {
 
     private Symbol translateBuiltInFunction(FunctionCall ast) {
         String name = ast.identifier().getText();
-        if (BuiltInFunction.getValueByKey(PRINT).equals(name) ||
-                BuiltInFunction.getValueByKey(PRINTLN).equals(name)) {
-            translatePrint(ast, name.equals(BuiltInFunction.getValueByKey(PRINTLN)));
-        } else if (BuiltInFunction.getValueByKey(READ).equals(name)) {
+        if (BuiltInFunction.isMatchKey(PRINT, name) ||
+                BuiltInFunction.isMatchKey(PRINTLN, name)) {
+            translatePrint(ast, BuiltInFunction.isMatchKey(PRINTLN, name));
+        } else if (BuiltInFunction.isMatchKey(READ, name)) {
             // todo 处理读
-        } else if (BuiltInFunction.getValueByKey(WRITE).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(WRITE, name)) {
             // todo 处理写
-        } else if (BuiltInFunction.getValueByKey(INT).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(INT, name)) {
             return translateCast(TACType.CAST_INT, ast);
-        } else if (BuiltInFunction.getValueByKey(STR).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(STR, name)) {
             return translateCast(TACType.CAST_STR, ast);
-        } else if (BuiltInFunction.getValueByKey(FLOAT).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(FLOAT, name)) {
             return translateCast(TACType.CAST_FLOAT, ast);
-        } else if (BuiltInFunction.getValueByKey(BYTE).equals(name)) {
+        } else if (BuiltInFunction.isMatchKey(BYTE, name)) {
             return translateCast(TACType.CAST_BYTE, ast);
-        } else if (BuiltInFunction.getValueByKey(STR_LEN).equals(name)){
+        } else if (BuiltInFunction.isMatchKey(STR_LEN, name)){
             return translateStrLen(ast);
-        } else if (BuiltInFunction.getValueByKey(STR_AT).equals(name)){
+        } else if (BuiltInFunction.isMatchKey(STR_AT, name)){
 //            List<Object> list = getArgsSymbol(ast);
 //            if (list.size() < 2) return null;
 //            Object idx = list.get(1);

@@ -28,7 +28,7 @@ public class TypeType extends ASTNode {
         if (token.getTokenType() == TokenType.KEYWORD) {
             if (isPrimitiveType(token)) {
                 typeType.addChild(PrimitiveType.parse(it));
-            } else if (token.getText().equals(Keyword.getValueByKey(FUNCTION))) {
+            } else if (Keyword.isMatchKey(FUNCTION, token.getText())) {
                 typeType.addChild(FunctionType.parse(it));
             }
         } else if (token.isId()) {
@@ -73,10 +73,10 @@ public class TypeType extends ASTNode {
             return false;
         }
         String text = token.getText();
-        return text.equals(Keyword.getValueByKey(CHAR)) ||
-                text.equals(Keyword.getValueByKey(STRING)) ||
-                text.equals(Keyword.getValueByKey(INT)) ||
-                text.equals(Keyword.getValueByKey(FLOAT)) ||
-                text.equals(Keyword.getValueByKey(BOOLEAN));
+        return Keyword.isMatchKey(CHAR, text) ||
+                Keyword.isMatchKey(STRING, text) ||
+                Keyword.isMatchKey(INT, text) ||
+                Keyword.isMatchKey(FLOAT, text) ||
+                Keyword.isMatchKey(BOOLEAN, text);
     }
 }

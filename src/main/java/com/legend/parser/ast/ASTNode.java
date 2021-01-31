@@ -1,5 +1,6 @@
 package com.legend.parser.ast;
 
+import com.legend.lexer.Keyword;
 import com.legend.lexer.Token;
 import com.legend.lexer.TokenType;
 import com.legend.parser.common.ASTListener;
@@ -202,6 +203,15 @@ public class ASTNode {
 
     public TerminalNode getTerminalNode(String text) {
         return getTerminalNode(text, 0);
+    }
+
+    public TerminalNode getTerminalNode(Keyword.Key key) {
+        String[] keys = Keyword.getValuesByKey(key);
+        for (String k : keys) {
+            TerminalNode node = getTerminalNode(k, 0);
+            if (node != null) return node;
+        }
+        return null;
     }
 
     public TerminalNode getTerminalNode(String text, int idx) {

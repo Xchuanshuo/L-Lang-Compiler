@@ -24,23 +24,23 @@ public class PrimitiveType extends ASTNode {
     }
 
     public TerminalNode CHAR() {
-        return getTerminalNode(Keyword.getValueByKey(CHAR));
+        return getTerminalNode(CHAR);
     }
 
     public TerminalNode STRING() {
-        return getTerminalNode(Keyword.getValueByKey(STRING));
+        return getTerminalNode(STRING);
     }
 
     public TerminalNode FLOAT() {
-        return getTerminalNode(Keyword.getValueByKey(FLOAT));
+        return getTerminalNode(FLOAT);
     }
 
     public TerminalNode INT() {
-        return getTerminalNode(Keyword.getValueByKey(INT));
+        return getTerminalNode(INT);
     }
 
     public TerminalNode BOOLEAN() {
-        return getTerminalNode(Keyword.getValueByKey(BOOLEAN));
+        return getTerminalNode(BOOLEAN);
     }
 
 }

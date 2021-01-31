@@ -1,5 +1,6 @@
 package com.legend.vm;
 
+import com.legend.exception.LVMException;
 import com.legend.semantic.Class;
 import com.legend.semantic.Function;
 import com.legend.semantic.Type;
@@ -21,15 +22,36 @@ public class Object {
 
     public Object(Function function) {
         this.type = function;
-        this.data = new Slots(function.getLocalsSize());
+        this.data = new Slots(function.getClosureMaxSize());
     }
 
     public void setData(java.lang.Object data) {
         this.data = data;
     }
 
+    public void copyAndSet(Slots newSlots) {
+        Slots oldSlots = (Slots) data;
+        if (oldSlots.getSize() > newSlots.getSize()) {
+            throw new LVMException("The size of newSlots is" +
+                    "greater than the size of oldSlots!");
+        }
+        int size = oldSlots.getSize();
+        for (int i = 0;i < size;i++) {
+            if (oldSlots.isRef(i)) {
+                newSlots.setRef(i, oldSlots.getRef(i));
+            } else {
+                newSlots.setInt(i, oldSlots.getInt(i));
+            }
+        }
+        this.data = newSlots;
+    }
+
     public Class clazz() {
         return (Class) type;
+    }
+
+    public Type type() {
+        return type;
     }
 
     public Function function() {
@@ -57,6 +79,10 @@ public class Object {
     }
 
     public Slots fieldSlots() {
+        return (Slots) data;
+    }
+
+    public Slots upValueSlots() {
         return (Slots) data;
     }
 
