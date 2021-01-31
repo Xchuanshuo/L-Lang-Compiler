@@ -25,14 +25,18 @@ import java.io.IOException;
  */
 public class Compiler {
 
-    public static void main(String[] args) throws Exception {
+    public static void main(String[] args) {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
-                "L-Lang-Compiler/example/this-and-super.l";
+                "L-Lang-Compiler/example/module.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
 //        }
-        compile(path);
+        try {
+            compile(path);
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
     }
 
     public static void compile(String path) throws Exception {

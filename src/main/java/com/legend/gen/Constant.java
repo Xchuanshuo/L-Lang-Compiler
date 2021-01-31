@@ -20,23 +20,25 @@ public class Constant {
     public static final byte FSUB = 0x11;
     public static final byte FMUL = 0x12;
     public static final byte FDIV = 0x13;
-    public static final byte SADD = 0x20;
+    public static final byte SADD = 0x15;
 
     // 比较
-    public static final byte ICMP_LT = 0x21;
-    public static final byte ICMP_LE = 0x22;
-    public static final byte ICMP_GT = 0x23;
-    public static final byte ICMP_GE = 0x24;
-    public static final byte ICMP_EQ = 0x25;
-    public static final byte ICMP_NE = 0x26;
-    public static final byte FCMP_LT = 0x27;
-    public static final byte FCMP_LE = 0x28;
-    public static final byte FCMP_GT = 0x29;
-    public static final byte FCMP_GE = 0x2A;
-    public static final byte FCMP_EQ = 0x2B;
-    public static final byte FCMP_NE = 0x2C;
-    public static final byte ICMP_AND = 0x2D;
-    public static final byte ICMP_OR = 0x2E;
+    public static final byte ICMP_LT = 0x20;
+    public static final byte ICMP_LE = 0x21;
+    public static final byte ICMP_GT = 0x22;
+    public static final byte ICMP_GE = 0x23;
+    public static final byte ICMP_EQ = 0x24;
+    public static final byte ICMP_NE = 0x25;
+    public static final byte ACMP_NE = 0x26;
+    public static final byte ACMP_EQ = 0x27;
+    public static final byte FCMP_LT = 0x28;
+    public static final byte FCMP_LE = 0x29;
+    public static final byte FCMP_GT = 0x2A;
+    public static final byte FCMP_GE = 0x2B;
+    public static final byte FCMP_EQ = 0x2C;
+    public static final byte FCMP_NE = 0x2D;
+    public static final byte ICMP_AND = 0x2E;
+    public static final byte ICMP_OR = 0x2F;
 
     // 分支与跳转
     public static final byte JUMP = 0x30;

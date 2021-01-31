@@ -12,7 +12,7 @@ import com.legend.semantic.PrimitiveType;
 /**
  * @author Legend
  * @data by on 20-11-17.
- * @description ast第4次扫描: 类型检查
+ * @description ast第4次扫描: 类型检查 隐式类型转换
  *  1.赋值表达式 2.变量初始化 3.表达式操作数
  *  4.返回值类型
  *

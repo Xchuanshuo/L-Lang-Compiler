@@ -52,6 +52,8 @@ public class OpCode {
     public static final OpCode ICMP_GE = new OpCode(Constant.ICMP_GE, "ICMP_GE", REGISTER);
     public static final OpCode ICMP_EQ = new OpCode(Constant.ICMP_EQ, "ICMP_EQ", REGISTER);
     public static final OpCode ICMP_NE = new OpCode(Constant.ICMP_NE, "ICMP_NE", REGISTER);
+    public static final OpCode ACMP_EQ = new OpCode(Constant.ACMP_EQ, "ACMP_EQ", REGISTER);
+    public static final OpCode ACMP_NE = new OpCode(Constant.ACMP_NE, "ACMP_NE", REGISTER);
     public static final OpCode FCMP_LT = new OpCode(Constant.FCMP_LT, "FCMP_LT", REGISTER);
     public static final OpCode FCMP_LE = new OpCode(Constant.FCMP_LE, "FCMP_LE", REGISTER);
     public static final OpCode FCMP_GT = new OpCode(Constant.FCMP_GT, "FCMP_GT", REGISTER);

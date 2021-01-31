@@ -233,6 +233,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                     return s;
                 }
                 genGetField((Variable) symbol, thisV, s);
+                variableMap.put((Variable) at.symbolOfNode.get(ast), (Variable) symbol);
                 if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
                     tmpFieldData.offer((Variable) s);
                 }
@@ -261,13 +262,15 @@ public class TACGenerator extends BaseASTVisitor<Object> {
         Scope scope = getScope(ast);
         boolean isLeftChild = ast.getParent() instanceof Expr
                 && ((Expr)ast.getParent()).leftChild() == ast;
-        if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr()) {
+        if (isLeftChild && ((Expr) ast.getParent()).isAssignExpr() &&
+                !(ast instanceof ArrayCall)) {
             return moduleVar;
         }
         Variable result = scope.createTempVariable(moduleVar.getType());
         NameSpace module = (NameSpace) moduleVar.getEnclosingScope();
         genGetModuleVar(result, module, moduleVar);
-        if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
+        if (!(ast instanceof ArrayCall) && isLeftChild
+                && ast.getParent().getToken().isAssignOperator()) {
             tmpFieldData.offer(moduleVar);
         }
         return result;
@@ -326,7 +329,8 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 result = (Variable) left;
                 if (result.isClassMember()) {
                     processClassMemberAssign(ast, result, (Symbol) right);
-                } else if (result.isModuleVar()) {
+                } else if (result.isModuleVar() && tmpIdxData.isEmpty()) {
+                    // 模块数组赋值特殊处理
                     processModuleVarAssign(result, (Symbol) right);
                 } else if (result.isUpValue()){
                     return processUpValueAssign(result, (Symbol)right);
@@ -420,7 +424,7 @@ public class TACGenerator extends BaseASTVisitor<Object> {
                 return variable;
             }
             result = scope.createTempVariable(at.typeOfNode.get(ast));
-            if (ast.getParent().getToken().isAssignOperator()) {
+            if (isLeftChild && ast.getParent().getToken().isAssignOperator()) {
                 tmpFieldData.offer(variable); // 处理xx.xx op= xx 表达式
             }
             if (variable.isStatic()) {

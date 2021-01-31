@@ -499,10 +499,10 @@ public class ByteCodeGenerator {
             t1 = ((Variable) arg1).getType();
         }
         Type t2 =  null;
-        if (arg1 instanceof Constant) {
-            t2 = ((Constant) arg1).getType();
+        if (arg2 instanceof Constant) {
+            t2 = ((Constant) arg2).getType();
         } else if (arg1 instanceof Variable) {
-            t2 = ((Variable) arg1).getType();
+            t2 = ((Variable) arg2).getType();
         }
         return PrimitiveType.getUpperType(t1, t2);
     }
@@ -545,7 +545,7 @@ public class ByteCodeGenerator {
         } else if (type == PrimitiveType.Float) {
             emitFcmpNE(r1, r2, r3);
         } else {
-            emitIcmpNE(r1, r2, r3);
+            emitAcmpNE(r1, r2, r3);
         }
     }
 
@@ -555,7 +555,7 @@ public class ByteCodeGenerator {
         } else if (type == PrimitiveType.Float) {
             emitFcmpEQ(r1, r2, r3);
         } else {
-            emitIcmpEQ(r1, r2, r3);
+            emitAcmpEQ(r1, r2, r3);
         }
     }
 
@@ -696,6 +696,14 @@ public class ByteCodeGenerator {
 
     private void emitIcmpNE(Register r1, Register r2, Register r3) {
         program.addIns(Instruction.register(OpCode.ICMP_NE, r1, r2, r3));
+    }
+
+    private void emitAcmpEQ(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ACMP_EQ,r1, r2, r3));
+    }
+
+    private void emitAcmpNE(Register r1, Register r2, Register r3) {
+        program.addIns(Instruction.register(OpCode.ACMP_NE, r1, r2, r3));
     }
 
     private void emitFcmpLT(Register r1, Register r2, Register r3) {

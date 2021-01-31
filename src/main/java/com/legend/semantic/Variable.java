@@ -3,6 +3,8 @@ package com.legend.semantic;
 import com.legend.parser.ast.ASTNode;
 import com.legend.parser.ast.ArrayCall;
 
+import java.util.List;
+
 /**
  * @author Legend
  * @data by on 20-11-14.
@@ -40,6 +42,11 @@ public class Variable extends Symbol {
 
     public boolean isModuleVar() {
         return enclosingScope instanceof NameSpace;
+//        if (enclosingScope instanceof NameSpace) {
+//            NameSpace nameSpace = (NameSpace) enclosingScope;
+//            return nameSpace.findModuleVar(name) == null;
+//        }
+//        return false;
     }
 
     public boolean isUpValue() {

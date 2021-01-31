@@ -1,6 +1,6 @@
 
 class Test {
-    int a = 1
+    int a
     static string s = "ss"
 
     Test(int a) {
@@ -12,7 +12,7 @@ class Test {
         int b = 2
         a += 1
         a += b
-        println(b)
+        println(a)
     }
 }
 
@@ -23,7 +23,7 @@ void printArr() {
     }
 }
 Test t = Test(10)
-t.t()
 println(t.a)
-println(Test.s)
-printArr()
+t.t()
+//println(Test.s)
+//printArr()

@@ -15,28 +15,34 @@ class ListNode {
 
 // 链表
 class LinkedList {
-    ListNode start;
-    ListNode end;
+    int size
+    ListNode start
+    ListNode end
 
     // 添加新节点
     void add(int value) {
-        ListNode newNode = ListNode(value);
+        ListNode newNode = ListNode(value)
         if (start == null) {
-            start = newNode;
-            end = newNode;
+            start = newNode
+            end = newNode
         } else {
             end.next = newNode;
             end = end.next;
         }
+        size += 1
     }
 
     // 打印所有节点内容
     void dump() {
-        ListNode head = start;
+        ListNode head = start
         while(head != null) {
             println(head.value);
             head = head.next;
         }
+    }
+
+    int size() {
+        return size
     }
 
     // 高阶函数功能，参数是一个函数，对每个成员做一个计算，形成一个新的LinkedList

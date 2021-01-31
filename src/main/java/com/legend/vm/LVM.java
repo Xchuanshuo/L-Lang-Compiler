@@ -63,10 +63,6 @@ public class LVM {
                 System.out.println(ins.toString());
             }
             exec(ins);
-//            try {
-//                Thread.sleep(500);
-//            } catch (InterruptedException e) {
-//            }
         }
         onStop();
     }
@@ -148,6 +144,12 @@ public class LVM {
                 break;
             case ICMP_NE:
                 icmpNE(ins);
+                break;
+            case ACMP_EQ:
+                acmpEQ(ins);
+                break;
+            case ACMP_NE:
+                acmpNE(ins);
                 break;
             case FCMP_LT:
                 fcmpLT(ins);
@@ -464,6 +466,20 @@ public class LVM {
         registers.setBoolean(r3, val1 != val2);
     }
 
+    private void acmpEQ(Instruction ins) {
+        Object ref1 = registers.getRef(ins.getRegOperand(0));
+        Object ref2 = registers.getRef(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setBoolean(r3, ref1 == ref2);
+    }
+
+    private void acmpNE(Instruction ins) {
+        Object ref1 = registers.getRef(ins.getRegOperand(0));
+        Object ref2 = registers.getRef(ins.getRegOperand(1));
+        Register r3 = ins.getRegOperand(2);
+        registers.setBoolean(r3, ref1 != ref2);
+    }
+
     private void fcmpLT(Instruction ins) {
         float val1 = registers.getFloat(ins.getRegOperand(0));
         float val2 = registers.getFloat(ins.getRegOperand(1));
@@ -532,6 +548,8 @@ public class LVM {
                 registers.setFloat(r3, cst.getFloatVal());
             } else if (cst.getType() == PrimitiveType.String) {
                 registers.setRef(r3, StringPool.getStrObj(cst.getStrVal()));
+            } else if (cst.getType() == PrimitiveType.Null) {
+                registers.setRef(r3, null);
             }
         } else {
             int address = registers.getInt(r1) + offset.getOffset();
