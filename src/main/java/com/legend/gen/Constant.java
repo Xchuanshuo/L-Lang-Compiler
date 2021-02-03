@@ -85,8 +85,9 @@ public class Constant {
     public static final byte I2F = (byte) 0x80;
     public static final byte I2B = (byte) 0x81;
     public static final byte I2S = (byte) 0x82;
-    public static final byte F2I = (byte) 0x83;
-    public static final byte F2S = (byte) 0x84;
+    public static final byte Z2S = (byte) 0x83;
+    public static final byte F2I = (byte) 0x84;
+    public static final byte F2S = (byte) 0x85;
 
     // native
     public static final byte PRINT = (byte) 0xF0;

@@ -100,6 +100,7 @@ public class OpCode {
     public static final OpCode I2F = new OpCode(Constant.I2F, "I2F", REGISTER1);
     public static final OpCode I2B = new OpCode(Constant.I2B, "I2B", REGISTER1);
     public static final OpCode I2S = new OpCode(Constant.I2S, "I2S", REGISTER1);
+    public static final OpCode Z2S = new OpCode(Constant.Z2S, "Z2S", REGISTER1);
     public static final OpCode F2I = new OpCode(Constant.F2I, "F2I", REGISTER1);
     public static final OpCode F2S = new OpCode(Constant.F2S, "F2S", REGISTER1);
 

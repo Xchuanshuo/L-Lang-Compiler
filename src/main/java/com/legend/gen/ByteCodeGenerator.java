@@ -144,10 +144,10 @@ public class ByteCodeGenerator {
         if (type == null) return;
         if (type == PrimitiveType.Float) {
             emitF2S(Register.R1, Register.R2);
-        } else if (type == PrimitiveType.Integer
-                || type == PrimitiveType.Boolean) {
-            // todo
+        } else if (type == PrimitiveType.Integer) {
             emitI2S(Register.R1, Register.R2);
+        } else if (type == PrimitiveType.Boolean) {
+            emitZ2S(Register.R1, Register.R2);
         }
         emitStore(Register.R2, tac.getResultVar());
     }
@@ -897,6 +897,10 @@ public class ByteCodeGenerator {
 
     private void emitI2S(Register r1, Register r2) {
         program.addIns(Instruction.register1(OpCode.I2S, r1, r2));
+    }
+
+    private void emitZ2S(Register r1, Register r2) {
+        program.addIns(Instruction.register1(OpCode.Z2S, r1, r2));
     }
 
     private void emitF2I(Register r1, Register r2) {

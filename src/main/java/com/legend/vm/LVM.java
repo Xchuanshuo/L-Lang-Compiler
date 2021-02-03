@@ -11,6 +11,7 @@ import com.legend.common.MetadataArea;
 import com.legend.gen.OpCode;
 import com.legend.gen.operand.Offset;
 import com.legend.gen.operand.Register;
+import com.legend.lexer.Keyword;
 import com.legend.semantic.*;
 import com.legend.semantic.Class;
 
@@ -203,6 +204,9 @@ public class LVM {
                 break;
             case I2S:
                 i2s(ins);
+                break;
+            case Z2S:
+                z2s(ins);
                 break;
             case F2I:
                 f2i(ins);
@@ -687,6 +691,14 @@ public class LVM {
         Register r2 = ins.getRegOperand(1);
         int val = registers.getInt(r1);
         registers.setRef(r2, StringPool.getStrObj(String.valueOf(val)));
+    }
+
+    private void z2s(Instruction ins) {
+        Register r1 = ins.getRegOperand(0);
+        Register r2 = ins.getRegOperand(1);
+        int val = registers.getInt(r1);
+        String str = val == 1 ? Keyword.TRUE : Keyword.FALSE;
+        registers.setRef(r2, StringPool.getStrObj(str));
     }
 
     private void f2i(Instruction ins) {
