@@ -31,7 +31,7 @@ memberDeclaration
     ;
 
 functionDeclaration
-    : (STATIC)? typeTypeOrVoid? IDENTIFIER formalParameters
+    : (STATIC|BUILTIN)? typeTypeOrVoid? IDENTIFIER formalParameters
       (THROWS qualifiedNameList)?
       functionBody
     ;

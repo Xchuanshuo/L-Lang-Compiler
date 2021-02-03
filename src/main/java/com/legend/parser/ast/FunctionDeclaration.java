@@ -23,6 +23,9 @@ public class FunctionDeclaration extends ASTNode {
         if (it.topIsEqual(Keyword.Key.STATIC)) {
             func.addChild(new TerminalNode(it.nextMatch(Keyword.Key.STATIC)));
         }
+        if (it.topIsEqual(Keyword.Key.BUILTIN)) {
+            func.addChild(new TerminalNode(it.nextMatch(Keyword.Key.BUILTIN)));
+        }
         TypeTypeOrVoid type = (TypeTypeOrVoid) TypeTypeOrVoid.parse(it);
         if (!it.topIsEqual("(")) { // 普通函数
             func.addChild(type);
@@ -49,6 +52,10 @@ public class FunctionDeclaration extends ASTNode {
 
     public TerminalNode STATIC() {
         return getTerminalNode(Keyword.Key.STATIC);
+    }
+
+    public TerminalNode BUILTIN() {
+        return getTerminalNode(Keyword.Key.BUILTIN);
     }
 
     public TypeTypeOrVoid typeTypeOrVoid() {

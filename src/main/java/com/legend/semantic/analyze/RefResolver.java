@@ -114,31 +114,31 @@ public class RefResolver extends BaseASTListener {
     public void exitExpr(Expr ast) {
         Type type = null;
         if (ast.isDotExpr()) {
-            Symbol symbol = at.symbolOfNode.get(ast.getChild(0));
+            Symbol left = at.symbolOfNode.get(ast.getChild(0));
             if (ast.getChild(0) instanceof ArrayCall && ast.getChild(1).getText().equals("length")) {
                 type = PrimitiveType.Integer;
-            } else if (!(symbol instanceof Variable)){
+            } else if (!(left instanceof Variable)){
                 // 不是变量的.表达式有两种情况 1.内部类 2.类的静态字段 3.外部模块
-                if (symbol instanceof Class) { // 内部类的情况
-                    type = findInnerClassDotStaticType(ast, (Class) symbol);
-                } else if(symbol instanceof Function) { // 左操作数为函数调用
-                    Function function = (Function) symbol;
+                if (left instanceof Class) { // 内部类的情况
+                    type = findInnerClassDotStaticType(ast, (Class) left);
+                } else if(left instanceof Function) { // 左操作数为函数调用
+                    Function function = (Function) left;
                     Class theClass = (Class) function.returnType();
                     type = findClassDotType(ast, theClass);
-                } else if (symbol instanceof Scope) { // 外部模块(命名空间NameSpace)
-                    type = findNameSpaceDotType(ast, (Scope) symbol);
+                } else if (left instanceof NameSpace) { // 外部模块(命名空间NameSpace)
+                    type = findNameSpaceDotType(ast, (Scope) left);
                 }
                 if (type == null) {
-                    at.log("symbol is not a qualified object: " + symbol, ast);
+                    at.log("symbol is not a qualified object: " + left, ast);
                 }
-            } else if (((Variable) symbol).getType() instanceof Class) {
-                Class theClass = (Class) ((Variable) symbol).getType();
+            } else if (((Variable) left).getType() instanceof Class) {
+                Class theClass = (Class) ((Variable) left).getType();
                 type = findClassDotType(ast, theClass);
-            } else if (((Variable) symbol).getType() instanceof ArrayType) {
+            } else if (((Variable) left).getType() instanceof ArrayType) {
                 String text = ast.getChild(1).getText();
                 if (text.equals("length")) {
                     type = PrimitiveType.Integer;
-                    at.symbolOfNode.put(ast, symbol);
+                    at.symbolOfNode.put(ast, left);
                 }
             }
         } else if (ast.getToken() != null && ast.exprs().size() >= 2) {
@@ -210,7 +210,14 @@ public class RefResolver extends BaseASTListener {
             } else {
                 Variable variable = at.lookupVariable(scope, name);
                 if (variable != null) {
+                    type = variable.getType();
                     at.symbolOfNode.put(ast, variable);
+                } else {
+                    Function function = at.lookupFunction(scope, name);
+                    if (function != null) {
+                        type = function;
+                        at.symbolOfNode.put(ast, function);
+                    }
                 }
             }
         }
@@ -622,8 +629,6 @@ public class RefResolver extends BaseASTListener {
             type = PrimitiveType.Integer;
         } else if (BuiltInFunction.isMatchKey(STR_LEN, name)) {
             type = PrimitiveType.Integer;
-        } else if (BuiltInFunction.isMatchKey(STR_AT, name)) {
-            type = PrimitiveType.String;
         }
         if (type != null) {
             at.typeOfNode.put(ast, type);

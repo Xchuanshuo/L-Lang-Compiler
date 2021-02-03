@@ -109,8 +109,6 @@ public class TACInstruction {
                 return String.format("arg %s", arg1);
             case PARAM:
                 return String.format("param %s", arg1);
-//            case SP:
-//                return String.format("SP %s", arg1);
             case CALL: // 函数有返回值时用临时变量接收
                 if (result != null) {
                     return String.format("%s = CALL %s", result, arg1);

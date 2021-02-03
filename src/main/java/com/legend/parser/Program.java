@@ -41,15 +41,16 @@ public class Program extends ASTNode {
                     }
                 } else {
                     program.addChild(0, module.blockStatements());
-                    program.addNewModule(module.blockStatements(), m.getKey());
+                    program.setNewModule(module.blockStatements(), m.getKey());
                 }
             }
         }
         program.addChild(blockStatements);
+//        program.setNewModule((BlockStatements) blockStatements, "_main_");
         return program;
     }
 
-    public void addNewModule(BlockStatements program, String id) {
+    public void setNewModule(BlockStatements program, String id) {
         programModuleMap.put(program, id);
     }
 

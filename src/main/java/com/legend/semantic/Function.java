@@ -1,6 +1,7 @@
 package com.legend.semantic;
 
 import com.legend.parser.ast.ASTNode;
+import com.legend.parser.ast.FunctionDeclaration;
 
 import java.util.LinkedList;
 import java.util.List;
@@ -51,6 +52,10 @@ public class Function extends Scope implements FunctionType {
 
     public List<Variable> getVariables() {
         return variables;
+    }
+
+    public void setParamTypeList(List<Type> paramTypeList) {
+        this.paramTypeList = paramTypeList;
     }
 
     @Override
@@ -142,5 +147,9 @@ public class Function extends Scope implements FunctionType {
     @Override
     public String toString() {
         return enclosingScope + "_" + name;
+    }
+
+    public boolean isBuiltIn() {
+        return ((FunctionDeclaration)astNode).BUILTIN() != null;
     }
 }

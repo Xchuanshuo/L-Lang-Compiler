@@ -53,7 +53,6 @@ Mammal Sheep(){
     m.speak = speak;
     m.getWeight = getWeight;
     m.setWeight = setWeight;
-
     return m;
 }
 

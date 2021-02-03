@@ -1,5 +1,8 @@
 package com.legend.vm;
 
+import com.legend.builtin.BuiltInClass;
+import com.legend.builtin.BuiltInFunction;
+import com.legend.builtin.Registry;
 import com.legend.common.ByteCodeReader;
 import com.legend.exception.GeneratorException;
 import com.legend.exception.LVMException;
@@ -14,6 +17,7 @@ import com.legend.semantic.Class;
 import java.util.Set;
 import java.util.Stack;
 
+import static com.legend.builtin.Registry.DEFAULT;
 import static com.legend.gen.Constant.*;
 
 /**
@@ -45,6 +49,7 @@ public class LVM {
     public void onStart() {
         System.out.println("-----------------------虚拟机启动-------------------------------");
         BuiltInClass.init();
+        Registry.initBuiltIn();
         registers.setInt(Register.PC, entry);
         registers.setInt(Register.BP, stackMemory.getSize() - 1);
         registers.setInt(Register.SP, stackMemory.getSize() - 1);
@@ -469,15 +474,27 @@ public class LVM {
     private void acmpEQ(Instruction ins) {
         Object ref1 = registers.getRef(ins.getRegOperand(0));
         Object ref2 = registers.getRef(ins.getRegOperand(1));
+        boolean res =  ref1 == ref2;
+        if (ref1 != null && ref2 != null
+                && ref1.getData() instanceof String
+                && ref2.getData() instanceof String) {
+            res = ref1.getData().equals(ref2.getData());
+        }
         Register r3 = ins.getRegOperand(2);
-        registers.setBoolean(r3, ref1 == ref2);
+        registers.setBoolean(r3, res);
     }
 
     private void acmpNE(Instruction ins) {
         Object ref1 = registers.getRef(ins.getRegOperand(0));
         Object ref2 = registers.getRef(ins.getRegOperand(1));
+        boolean res =  ref1 != ref2;
+        if (ref1 != null && ref2 != null
+                && ref1.getData() instanceof String
+                && ref2.getData() instanceof String) {
+            res = !ref1.getData().equals(ref2.getData());
+        }
         Register r3 = ins.getRegOperand(2);
-        registers.setBoolean(r3, ref1 != ref2);
+        registers.setBoolean(r3, res);
     }
 
     private void fcmpLT(Instruction ins) {
@@ -941,9 +958,27 @@ public class LVM {
         Offset offset1 = ins.getOffsetOperand(1);
         Offset offset2 = ins.getOffsetOperand(2);
 //        String classConst = area.getConstByIdx(offset1.getOffset()).getStrVal();
+        Function function = area.getFunctionByIdx(offset2.getOffset());
+        if (function.isBuiltIn()) {
+            processBuiltInFunc(function);
+            return;
+        }
         int methodPos = area.getFuncPosByIdx(offset2.getOffset());
         retAddressStack.push(registers.getInt(Register.PC));
         registers.setInt(Register.PC, methodPos);
+    }
+
+    private void processBuiltInFunc(Function function) {
+        String key = area.getFunctionSignature(function);
+        if (!function.isMethod()) {
+            String tmp = key.substring(key.indexOf(function.name()));
+            key = DEFAULT + "_" + tmp;
+        }
+        BuiltInFunction func = Registry.findBuiltin(key);
+        int pos = registers.getInt(Register.SP) + 1;
+        stackMemory.setOffset(pos);
+        func.invoke(stackMemory, registers);
+        stackMemory.setOffset(0);
     }
 
     private void invokeVarFunc(Instruction ins) {

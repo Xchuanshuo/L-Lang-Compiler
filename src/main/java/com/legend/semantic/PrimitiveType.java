@@ -32,15 +32,15 @@ public class PrimitiveType implements Type {
     }
 
     // 定义程序的基本类型
-    public static PrimitiveType Char = new PrimitiveType("Char");
-    public static PrimitiveType Byte = new PrimitiveType("Byte");
-    public static PrimitiveType Boolean = new PrimitiveType("Boolean");
-    public static PrimitiveType Short = new PrimitiveType("Short");
-    public static PrimitiveType Integer = new PrimitiveType("Integer");
-    public static PrimitiveType Long = new PrimitiveType("Long");
-    public static PrimitiveType Float = new PrimitiveType("Float");
-    public static PrimitiveType Double = new PrimitiveType("Double");
-    public static PrimitiveType String = new PrimitiveType("String");
+    public static PrimitiveType Char = new PrimitiveType("C");
+    public static PrimitiveType Byte = new PrimitiveType("B");
+    public static PrimitiveType Boolean = new PrimitiveType("Z");
+    public static PrimitiveType Short = new PrimitiveType("S");
+    public static PrimitiveType Integer = new PrimitiveType("I");
+    public static PrimitiveType Long = new PrimitiveType("L");
+    public static PrimitiveType Float = new PrimitiveType("F");
+    public static PrimitiveType Double = new PrimitiveType("D");
+    public static PrimitiveType String = new PrimitiveType("ST");
     public static PrimitiveType Null = new PrimitiveType("null");
 
     /**

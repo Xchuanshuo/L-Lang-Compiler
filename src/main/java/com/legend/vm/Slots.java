@@ -11,6 +11,7 @@ public class Slots {
 
     private Slot[] slots;
     private int slotCount = 0;
+    private int offset = 0;
 
     public Slots(int slotCount) {
         this.slotCount = slotCount;
@@ -22,9 +23,17 @@ public class Slots {
         }
     }
 
+    public void setOffset(int offset) {
+        this.offset = offset;
+    }
+
+    public int getOffset() {
+        return offset;
+    }
+
     public void setInt(int idx, int val) {
-        slots[idx].num = val;
-        slots[idx].isRef = false;
+        slots[idx + offset].num = val;
+        slots[idx + offset].isRef = false;
     }
 
     public void setInt(Register r1, int val) {
@@ -32,7 +41,7 @@ public class Slots {
     }
 
     public int getInt(int idx) {
-        return (int) slots[idx].num;
+        return (int) slots[idx + offset].num;
     }
 
     public int getInt(Register r1) {
@@ -40,8 +49,8 @@ public class Slots {
     }
 
     public void setBoolean(int idx, boolean val) {
-        slots[idx].num = val ? 1 : 0;
-        slots[idx].isRef = false;
+        slots[idx + offset].num = val ? 1 : 0;
+        slots[idx + offset].isRef = false;
     }
 
     public void setBoolean(Register r1, boolean val) {
@@ -49,7 +58,7 @@ public class Slots {
     }
 
     public boolean getBoolean(int idx) {
-        return (int) slots[idx].num == 1;
+        return (int) slots[idx + offset].num == 1;
     }
 
     public boolean getBoolean(Register r1) {
@@ -58,8 +67,8 @@ public class Slots {
 
 
     public void setFloat(int idx, float val) {
-        slots[idx].num = Float.floatToIntBits(val);
-        slots[idx].isRef = false;
+        slots[idx + offset].num = Float.floatToIntBits(val);
+        slots[idx + offset].isRef = false;
     }
 
     public void setFloat(Register r1, float val) {
@@ -67,7 +76,7 @@ public class Slots {
     }
 
     public Float getFloat(int idx) {
-        int num = (int) slots[idx].num;
+        int num = (int) slots[idx + offset].num;
         return Float.intBitsToFloat(num);
     }
 
@@ -76,13 +85,13 @@ public class Slots {
     }
 
     public void setLong(int idx, long val) {
-        slots[idx].num = val;
-        slots[idx + 1].num = val >> 32;
+        slots[idx + offset].num = val;
+        slots[idx + 1 + offset].num = val >> 32;
     }
 
     public Long getLong(int idx) {
-        long low = slots[idx].num;
-        long high = slots[idx + 1].num;
+        long low = slots[idx + offset].num;
+        long high = slots[idx + 1 + offset].num;
         return low | (high << 32);
     }
 
@@ -96,12 +105,12 @@ public class Slots {
     }
 
     public void setRef(int idx, Object ref) {
-        slots[idx].ref = ref;
-        slots[idx].isRef = true;
+        slots[idx + offset].ref = ref;
+        slots[idx + offset].isRef = true;
     }
 
     public boolean isRef(int idx) {
-        return slots[idx].isRef;
+        return slots[idx + offset].isRef;
     }
 
     public boolean isRef(Register r1) {
@@ -113,7 +122,7 @@ public class Slots {
     }
 
     public Object getRef(int idx) {
-        return slots[idx].ref;
+        return slots[idx + offset].ref;
     }
 
     public Object getRef(Register r1) {

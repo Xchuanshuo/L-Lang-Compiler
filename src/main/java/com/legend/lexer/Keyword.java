@@ -19,7 +19,7 @@ public class Keyword {
         SWITCH, CASE, RETURN, IS, EXTENDS, AS,
         FINAL, FINALLY, IMPLEMENTS, IMPORT, PRIVATE,
         PROTECTED, PUBLIC, VOID, STATIC, SUPER, THIS,
-        THROW, THROWS, TRY, CATCH, FUNCTION,
+        THROW, THROWS, TRY, CATCH, FUNCTION, BUILTIN
     }
 
     private static String[] keyWordStr_en = {
@@ -29,7 +29,7 @@ public class Keyword {
             "switch", "case", "return", "is", "extends", "as",
             "final", "finally", "implements", "import", "private",
             "protected", "public", "void", "static", "super", "this",
-            "throw", "throws", "try", "catch", "function"
+            "throw", "throws", "try", "catch", "function", "builtin"
     };
 
     private static String[] keyWordStr_zh = {
@@ -39,9 +39,8 @@ public class Keyword {
             "switch", "case", "返回", "is", "继承", "作为",
             "final", "finally", "implements", "import", "private",
             "protected", "public", "无返回值", "静态", "父类", "当前",
-            "throw", "throws", "try", "catch", "函数"
+            "throw", "throws", "try", "catch", "函数", "内建"
     };
-
 
 //    private static Map<Key, String> map = new HashMap<>();
     private static Map<Key, String[]> map = new HashMap<>();
@@ -73,8 +72,8 @@ public class Keyword {
     public static boolean isKeyword(String str) {
         Collection<String[]> values = map.values();
         for (String[] value : values) {
-            if (value[0].equals(str) || value[1].equals(str)) {
-                return true;
+            for (String v: value) {
+                if (v.equals(str)) return true;
             }
         }
         return false;

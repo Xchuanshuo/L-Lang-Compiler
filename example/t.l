@@ -62,3 +62,10 @@
     换行打印(斐波())
     变量 -= 1
 }
+println("sss")
+
+class A {
+    string a = "ss"
+    int b = 19
+
+}

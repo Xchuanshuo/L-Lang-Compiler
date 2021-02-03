@@ -1,22 +1,22 @@
-import m1
-import sys.math
+import sys.strings
+import sys.math as M
 import LinkedList
 
-int a = max(1, 2)
+int a = M.max(1, 2)
 println("max:" + a)
-float b = min(0.7, 2.8)
+float b = M.min(0.7, 2.8)
 println("min:"  + b)
-println(int(PI))
+println(int(M.PI))
 println(float(0x21))
-//string s = "jaj"
-//string s1 = "ja"
-//println(s == s1)
-//println("字符串s长度:" + strLen(s))
-//println("字符串s第2个字符:" + strAt(s, 1))
-//println("字符串切割:" + subString(s, 1,2))
-//println("字符串startsWith:" + startsWith(s, s1))
-//println("字符串endsWith:" + endsWith(s, s1))
-//println("-------------------链表-----------------")
+string s = "jaj"
+string s1 = "ja"
+println(s == s1)
+println("字符串s长度:" + len(s))
+println("字符串s第2个字符:" + strAt(s, 1))
+println("字符串切割:" + subString(s, 1,2))
+println("字符串startsWith:" + startsWith(s, s1))
+println("字符串endsWith:" + endsWith(s, s1))
+println("-------------------链表-----------------")
 
 LinkedList list = LinkedList()
 list.add(2)

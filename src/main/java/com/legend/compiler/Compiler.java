@@ -25,18 +25,14 @@ import java.io.IOException;
  */
 public class Compiler {
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws Exception {
         String path = "/home/legend/Projects/IdeaProjects/2020/编译原理/" +
                 "L-Lang-Compiler/example/module.l";
 //        List<Token> tokenList = Lexer.fromFile(path);
 //        for (Token token : tokenList) {
 //            System.out.println(token);
 //        }
-        try {
-            compile(path);
-        } catch (Exception e) {
-            e.printStackTrace();
-        }
+        compile(path);
     }
 
     public static void compile(String path) throws Exception {
@@ -52,6 +48,7 @@ public class Compiler {
     public static Program parse(String path, AnnotatedTree at) throws Exception{
         Program program = Parser.fromFile(path);
         at.setAstRoot(program);
+//        program.dumpAST();
         return program;
     }
 

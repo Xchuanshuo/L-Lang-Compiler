@@ -20,6 +20,6 @@ public class StringPool {
     }
 
     public static String getString(Object object) {
-        return object.toString();
+        return ((String) object.getData());
     }
 }

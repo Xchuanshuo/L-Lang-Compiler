@@ -288,13 +288,17 @@ public class Class extends Scope implements Type {
             throw new RuntimeException("Not array class " + this.name);
         }
         switch (name) {
-            case "Byte[":
+            case "B[":
                 return new Object(this, new byte[count]);
-            case "Integer[":
+            case "I[":
                 return new Object(this, new int[count]);
-            case "Float[":
+            case "L[":
+                return new Object(this, new long[count]);
+            case "F[":
                 return new Object(this, new float[count]);
-            case "Boolean[":
+            case "D[":
+                return new Object(this, new double[count]);
+            case "Z[":
                 return new Object(this, new int[count]);
             default:
                 return new Object(this, new Object[count]);

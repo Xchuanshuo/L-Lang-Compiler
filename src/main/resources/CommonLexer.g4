@@ -32,6 +32,7 @@ INT:                'int';
 INTERFACE:          'interface';
 LONG:               'long';
 NATIVE:             'native';
+BUILTIN:             'builtin';
 NEW:                'new';
 PACKAGE:            'package';
 PRIVATE:            'private';

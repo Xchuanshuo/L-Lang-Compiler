@@ -990,15 +990,17 @@ public class LInterpreter extends BaseASTVisitor<Object> {
                 value = ((LValue) value).getValue();
             }
             return String.valueOf(value).length();
-        } else if (BuiltInFunction.getValueByKey(STR_AT).equals(name)){
-            List<Object> list = getParamValues(ast);
-            if (list.size() < 2) return null;
-            Object idx = list.get(1);
-            if (idx instanceof Long) {
-                idx = ((Long) idx).intValue();
-            }
-            return String.valueOf(list.get(0)).charAt((Integer) idx);
-        } else {
+        }
+//        else if (BuiltInFunction.getValueByKey(STR_AT).equals(name)){
+//            List<Object> list = getParamValues(ast);
+//            if (list.size() < 2) return null;
+//            Object idx = list.get(1);
+//            if (idx instanceof Long) {
+//                idx = ((Long) idx).intValue();
+//            }
+//            return String.valueOf(list.get(0)).charAt((Integer) idx);
+//        }
+        else {
             System.out.println("no exist built in function ["+ name + "]' implementation!");
         }
         return null;

@@ -17,21 +17,20 @@ public class BuiltInFunction {
     public enum BuiltIn {
         PRINT, PRINTLN, READ, WRITE,
         INT, STR, FLOAT, BYTE, CHAR,
-        STR_LEN,STR_AT,
+        STR_LEN,
     }
 
     private static String[] builtInStr_en = {
             "print", "println", "read", "write",
             "int", "str", "float", "byte", "char",
-            "strLen", "strAt",
+            "strLen",
     };
 
     private static String[] builtInStr_zh = {
             "打印", "换行打印", "read", "write",
             "整形", "字符串", "浮点数", "字节", "字符型",
-            "字符串长度", "获取字符",
+            "字符串长度",
     };
-
 
 //    private static Map<BuiltIn, String> map = new HashMap<>();
     private static Map<BuiltIn, String[]> map = new HashMap<>();

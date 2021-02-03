@@ -54,7 +54,7 @@ public class SemanticValidator extends BaseASTListener {
         // 02-01 函数定义了返回值,就一定要有相应的return语句
         // todo 更完善的是要进行控制流计算,不是仅仅有一个return语句就行了
         if (ast.typeTypeOrVoid() != null) {
-            if (!hasReturnStatement(ast)) {
+            if (ast.BUILTIN() == null && !hasReturnStatement(ast)) {
                 Type returnType = at.typeOfNode.get(ast.typeTypeOrVoid());
                 if (returnType != VoidType.instance()) {
                     at.log("return statement expected in Function", ast);

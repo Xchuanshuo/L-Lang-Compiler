@@ -7,6 +7,7 @@ import com.legend.parser.ast.ASTNode;
 import com.legend.parser.ast.TypeType;
 import com.legend.parser.common.PeekTokenIterator;
 
+import static com.legend.lexer.Keyword.Key.BUILTIN;
 import static com.legend.lexer.Keyword.Key.STATIC;
 import static com.legend.lexer.Keyword.Key.VOID;
 import static java.lang.Enum.valueOf;
@@ -22,6 +23,9 @@ public class PeekUtils {
         int pos = it.getPosition();
         if (it.topIsEqual(STATIC)) {
             it.nextMatch(STATIC);
+        }
+        if (it.topIsEqual(BUILTIN)) {
+            it.nextMatch(BUILTIN);
         }
         if (Keyword.isMatchKey(VOID, it.peek().getText())) {
             it.putBackByPosition(pos);

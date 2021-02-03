@@ -1,7 +1,7 @@
-package com.legend.vm;
+package com.legend.builtin;
 
+import com.legend.builtin.core._String;
 import com.legend.common.MetadataArea;
-import com.legend.semantic.Class;
 import com.legend.semantic.PrimitiveType;
 
 /**
@@ -13,14 +13,6 @@ public class BuiltInClass {
 
     public static void init() {
         MetadataArea.getInstance().addType(PrimitiveType.String.name(), new _String());
-    }
-
-    public static class _String extends Class {
-
-        public _String() {
-            super("String", null);
-            setParentClass(rootClass);
-        }
     }
 
 
