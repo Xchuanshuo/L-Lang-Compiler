@@ -10,6 +10,7 @@ import com.legend.semantic.*;
 import com.legend.semantic.Class;
 import com.legend.vm.Slots;
 
+import java.io.Serializable;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -22,7 +23,7 @@ import java.util.Map;
  *          2.静态字段、类方法信息
  *          3.字符串常量池、整数、实数等字面量
  */
-public class MetadataArea {
+public class MetadataArea implements Serializable {
 
     private Map<String, Type> typeMap = new HashMap<>();
     private Map<String, NameSpace> moduleMap = new HashMap<>();

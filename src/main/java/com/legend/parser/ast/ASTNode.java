@@ -6,6 +6,7 @@ import com.legend.lexer.TokenType;
 import com.legend.parser.common.ASTListener;
 import com.legend.parser.common.ASTVisitor;
 
+import java.io.Serializable;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
 import java.util.List;
@@ -15,7 +16,7 @@ import java.util.List;
  * @data by on 20-11-8.
  * @description 抽象语法树节点
  */
-public class ASTNode {
+public class ASTNode implements Serializable {
 
     private List<ASTNode> children = new ArrayList<>();
     protected ASTNode parent = null;

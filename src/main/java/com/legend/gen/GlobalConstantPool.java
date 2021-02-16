@@ -3,6 +3,7 @@ package com.legend.gen;
 import com.legend.ir.Constant;
 import org.apache.commons.lang3.StringUtils;
 
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -13,7 +14,7 @@ import java.util.Map;
  * @data by on 20-12-28.
  * @description 字面量常量池
  */
-public class GlobalConstantPool {
+public class GlobalConstantPool implements Serializable {
 
     private Map<String, Constant> offsetMap = new HashMap<>();
     private List<Constant> constants = new ArrayList<>();

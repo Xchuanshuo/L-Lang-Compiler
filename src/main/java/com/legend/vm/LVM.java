@@ -31,20 +31,21 @@ public class LVM {
     private ByteCodeReader reader;
     private Slots registers = new Slots(32);
     private static final int DEFAULT_STACK_SIZE = 10000;
-    private MetadataArea area = MetadataArea.getInstance();
+    private MetadataArea area;
     private Stack<Integer> retAddressStack = new Stack<>();
     private int entry = 0;
     private Slots stackMemory;
     private final boolean isDebug = false;
 
-    public LVM(byte[] codes, int maxStackSize, int entry) {
+    public LVM(byte[] codes, int maxStackSize, int entry, MetadataArea area) {
         this.reader = new ByteCodeReader(codes);
         this.stackMemory = new Slots(maxStackSize);
         this.entry = entry;
+        this.area = area;
     }
 
-    public LVM(byte[] codes, int entry) {
-        this(codes, DEFAULT_STACK_SIZE, entry);
+    public LVM(byte[] codes, int entry, MetadataArea area) {
+        this(codes, DEFAULT_STACK_SIZE, entry, area);
     }
 
     public void onStart() {
@@ -563,13 +564,13 @@ public class LVM {
         Register r3 = ins.getRegOperand(2);
         if (r1 == Register.CONSTANT) {
             com.legend.ir.Constant cst = area.getConstByIdx(offset.getOffset());
-            if (cst.getType() == PrimitiveType.Integer) {
+            if (typeIsEquals(cst.getType(), PrimitiveType.Integer)) {
                 registers.setInt(r3, cst.getIntVal());
-            } else if (cst.getType() == PrimitiveType.Float) {
+            } else if (typeIsEquals(cst.getType(), PrimitiveType.Float)) {
                 registers.setFloat(r3, cst.getFloatVal());
-            } else if (cst.getType() == PrimitiveType.String) {
+            } else if (typeIsEquals(cst.getType(), PrimitiveType.String)) {
                 registers.setRef(r3, StringPool.getStrObj(cst.getStrVal()));
-            } else if (cst.getType() == PrimitiveType.Null) {
+            } else if (typeIsEquals(cst.getType(), PrimitiveType.Null)) {
                 registers.setRef(r3, null);
             }
         } else {
@@ -631,11 +632,12 @@ public class LVM {
         if (!registers.isRef(r1)) {
             Offset offset = ins.getOffsetOperand(1);
             Type type = area.getTypeByIdx(offset.getOffset());
-            if (type == PrimitiveType.Integer || type == PrimitiveType.Byte) {
+            if (typeIsEquals(type, PrimitiveType.Integer)
+                    || typeIsEquals(type, PrimitiveType.Byte)) {
                 val = registers.getInt(r1);
-            } else if (type == PrimitiveType.Float) {
+            } else if (typeIsEquals(type, PrimitiveType.Float)) {
                 val = registers.getFloat(r1);
-            } else if (type == PrimitiveType.Boolean) {
+            } else if (typeIsEquals(type, PrimitiveType.Boolean)) {
                 val = registers.getInt(r1) == 1 ? "true" : "false";
             }
         } else {
@@ -830,10 +832,11 @@ public class LVM {
         Variable field = ref.clazz().findField(name);
         int id = field.getOffset();
         Type type = field.getType();
-        if (type == PrimitiveType.Integer || type == PrimitiveType.Boolean
-                || type == PrimitiveType.Byte) {
+        if (typeIsEquals(type, PrimitiveType.Integer)
+                || typeIsEquals(type, PrimitiveType.Boolean)
+                || typeIsEquals(type, PrimitiveType.Byte)) {
             ref.fieldSlots().setInt(id, registers.getInt(valR));
-        } else if (type == PrimitiveType.Float) {
+        } else if (typeIsEquals(type, PrimitiveType.Float)) {
             ref.fieldSlots().setFloat(id, registers.getFloat(valR));
         } else {
             ref.fieldSlots().setRef(id, registers.getRef(valR));
@@ -939,14 +942,15 @@ public class LVM {
 
     private void setValByType(Type type, Slots srcSlots, Slots destSlots,
                               int srcId, int destId) {
-        if (type == PrimitiveType.Byte || type == PrimitiveType.Integer
-                || type == PrimitiveType.Boolean) {
+        if (typeIsEquals(type, PrimitiveType.Integer)
+                || typeIsEquals(type, PrimitiveType.Boolean)
+                || typeIsEquals(type, PrimitiveType.Byte)) {
             int val = srcSlots.getInt(srcId);
-            if (type == PrimitiveType.Byte) {
+            if (typeIsEquals(type, PrimitiveType.Byte)) {
                 val = val & 0xff;
             }
             destSlots.setInt(destId, val);
-        } else if (type == PrimitiveType.Float) {
+        } else if (typeIsEquals(type, PrimitiveType.Float)) {
             destSlots.setFloat(destId, srcSlots.getFloat(srcId));
         }  else {
             destSlots.setRef(destId, srcSlots.getRef(srcId));
@@ -1010,6 +1014,10 @@ public class LVM {
         Object ref = registers.getRef(ins.getRegOperand(0));
         int localsSize = ref.function().getVariables().size();
         registers.setInt(ins.getRegOperand(1), localsSize);
+    }
+
+    private boolean typeIsEquals(Type type1, Type type2) {
+        return type1.name().equals(type2.name());
     }
 
     private void ret() {

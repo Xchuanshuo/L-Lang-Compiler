@@ -1,5 +1,7 @@
 package com.legend.lexer;
 
+import java.io.Serializable;
+
 import static com.legend.lexer.Keyword.Key.*;
 
 /**
@@ -7,7 +9,7 @@ import static com.legend.lexer.Keyword.Key.*;
  * @data by on 20-11-8.
  * @description token
  */
-public class Token {
+public class Token implements Serializable {
 
     private TokenType tokenType;
     private String text;

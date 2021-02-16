@@ -2,12 +2,14 @@ package com.legend.semantic;
 
 import com.legend.parser.ast.ASTNode;
 
+import java.io.Serializable;
+
 /**
  * @author Legend
  * @data by on 20-11-14.
  * @description 符号
  */
-public class Symbol {
+public class Symbol implements Serializable {
 
     // 符号名称
     protected String name;
