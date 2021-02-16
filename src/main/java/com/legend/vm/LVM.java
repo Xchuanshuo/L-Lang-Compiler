@@ -631,7 +631,7 @@ public class LVM {
         if (!registers.isRef(r1)) {
             Offset offset = ins.getOffsetOperand(1);
             Type type = area.getTypeByIdx(offset.getOffset());
-            if (type == PrimitiveType.Integer) {
+            if (type == PrimitiveType.Integer || type == PrimitiveType.Byte) {
                 val = registers.getInt(r1);
             } else if (type == PrimitiveType.Float) {
                 val = registers.getFloat(r1);
@@ -941,7 +941,11 @@ public class LVM {
                               int srcId, int destId) {
         if (type == PrimitiveType.Byte || type == PrimitiveType.Integer
                 || type == PrimitiveType.Boolean) {
-            destSlots.setInt(destId, srcSlots.getInt(srcId));
+            int val = srcSlots.getInt(srcId);
+            if (type == PrimitiveType.Byte) {
+                val = val & 0xff;
+            }
+            destSlots.setInt(destId, val);
         } else if (type == PrimitiveType.Float) {
             destSlots.setFloat(destId, srcSlots.getFloat(srcId));
         }  else {

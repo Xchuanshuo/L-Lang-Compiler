@@ -73,7 +73,8 @@ public class TypeType extends ASTNode {
             return false;
         }
         String text = token.getText();
-        return Keyword.isMatchKey(CHAR, text) ||
+        return Keyword.isMatchKey(BYTE, text) ||
+                Keyword.isMatchKey(CHAR, text) ||
                 Keyword.isMatchKey(STRING, text) ||
                 Keyword.isMatchKey(INT, text) ||
                 Keyword.isMatchKey(FLOAT, text) ||

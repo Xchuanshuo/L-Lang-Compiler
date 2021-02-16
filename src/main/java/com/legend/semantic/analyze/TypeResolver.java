@@ -29,6 +29,9 @@ public class TypeResolver extends BaseASTListener {
         for (VariableDeclarator v : ast.variableDeclaratorList()) {
             Variable variable = (Variable) at.symbolOfNode.get(v.identifier());
             variable.setStatic(ast.STATIC() != null);
+            if (variable.isClassMember() && variable.isStatic()) {
+                ((Class)variable.getEnclosingScope()).addStatic(variable);
+            }
             variable.setType(type);
             at.typeOfNode.put(v.identifier(), type);
         }
@@ -47,12 +50,28 @@ public class TypeResolver extends BaseASTListener {
         }
     }
 
+//    private void processId(TerminalNode id) {
+//        String name = id.getText();
+//        Scope scope = at.enclosingScopeOfNode(id);
+//        // 两种情况下新建变量 1.变量声明 2.函数参数
+//        Variable variable = new Variable(name, scope, id);
+//        at.symbolOfNode.put(id, variable);
+//    }
+
     private void processId(TerminalNode id) {
         String name = id.getText();
         Scope scope = at.enclosingScopeOfNode(id);
-        // 两种情况下新建变量 1.变量声明 2.函数参数
+        if (Scope.getVariable(scope, name) != null) {
+            at.log("Variable or parameter already Declared:" + name, id);
+        }
         Variable variable = new Variable(name, scope, id);
         at.symbolOfNode.put(id, variable);
+        // 引用消解时再将变量放入作用域的符号表中
+        if (variable.isClassMember() && variable.isStatic()) {
+            ((Class)scope).addStatic(variable);
+        } else {
+            scope.addSymbol(variable);
+        }
     }
 
     @Override
@@ -165,7 +184,9 @@ public class TypeResolver extends BaseASTListener {
     @Override
     public void exitPrimitiveType(com.legend.parser.ast.PrimitiveType ast) {
         Type type = null;
-        if (ast.CHAR() != null) {
+        if (ast.BYTE() != null) {
+            type = PrimitiveType.Byte;
+        } else if (ast.CHAR() != null) {
             type = PrimitiveType.Char;
         } else if (ast.BOOLEAN() != null) {
             type = PrimitiveType.Boolean;

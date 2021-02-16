@@ -137,6 +137,14 @@ public class Expr extends ASTNode {
         return e(it, 0);
     }
 
+//    public Expr constFold(Expr expr) {
+//        switch (expr.token.getTokenType()) {
+//            case ADD: break;
+//            case SUB: break;
+//        }
+//
+//    }
+
     public boolean isDotExpr() {
         if (token == null) return false;
         return token.getText().equals(".");

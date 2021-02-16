@@ -84,7 +84,9 @@ public class PrimitiveType implements Type {
 
     public static Type getBaseTypeByText(String text) {
         Type type = PrimitiveType.Null;
-        if (Keyword.isMatchKey(INT, text)) {
+        if (Keyword.isMatchKey(BYTE, text)) {
+            type = PrimitiveType.Byte;
+        } else if (Keyword.isMatchKey(INT, text)) {
             type = PrimitiveType.Integer;
         } else if (Keyword.isMatchKey(FLOAT, text)) {
             type = PrimitiveType.Float;

@@ -3,20 +3,19 @@
 */
 
 //全局变量
-int i = 0;
-println(i);  //输出：0
+int i1 = 0;
+println(i1);  //输出：0
 
 {
     //这里引用的是全局变量
-    i = 2;
-    println(i); //输出：2
+    i1 = 2;
+    println(i1); //输出：2
 
     //允许在块里新创建一个同名的变量
     int i = 3;
     println(i); //输出：3
 }
-
 //重新看看全局变量的值
-println(i);  //输出：2
+println(i1);  //输出：2
 
 

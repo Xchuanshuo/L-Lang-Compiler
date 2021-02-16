@@ -63,7 +63,8 @@ public class Token {
         if (tokenType != TokenType.KEYWORD) {
             return false;
         }
-        return Keyword.isMatchKey(INT, getText()) ||
+        return Keyword.isMatchKey(BYTE, getText()) ||
+                Keyword.isMatchKey(INT, getText()) ||
                 Keyword.isMatchKey(FLOAT, getText()) ||
                 Keyword.isMatchKey(CHAR, getText()) ||
                 Keyword.isMatchKey(STRING, getText()) ||

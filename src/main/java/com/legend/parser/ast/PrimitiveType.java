@@ -27,6 +27,10 @@ public class PrimitiveType extends ASTNode {
         return getTerminalNode(CHAR);
     }
 
+    public TerminalNode BYTE() {
+        return getTerminalNode(BYTE);
+    }
+
     public TerminalNode STRING() {
         return getTerminalNode(STRING);
     }

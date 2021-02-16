@@ -218,7 +218,7 @@ public class TypeChecker extends BaseASTListener {
             canAssign = (from == PrimitiveType.Byte
                     || from == PrimitiveType.Short);
         } else if (to == PrimitiveType.Byte) {
-            canAssign = from == PrimitiveType.Byte;
+            canAssign = from == PrimitiveType.Byte || from == PrimitiveType.Integer;
         } else if (to == PrimitiveType.String) {
             canAssign = from == PrimitiveType.String;
         } else if (to instanceof ArrayType) {

@@ -386,18 +386,18 @@ public class RefResolver extends BaseASTListener {
     }
 
     private void processId(TerminalNode id) {
-        String name = id.getText();
-        Scope scope = at.enclosingScopeOfNode(id);
-        if (Scope.getVariable(scope, name) != null) {
-            at.log("Variable or parameter already Declared:" + name, id);
-        }
-        Variable variable = (Variable) at.symbolOfNode.get(id);
-        // 引用消解时再将变量放入作用域的符号表中
-        if (variable.isClassMember() && variable.isStatic()) {
-            ((Class)scope).addStatic(variable);
-        } else {
-            scope.addSymbol(variable);
-        }
+//        String name = id.getText();
+//        Scope scope = at.enclosingScopeOfNode(id);
+//        if (Scope.getVariable(scope, name) != null) {
+//            at.log("Variable or parameter already Declared:" + name, id);
+//        }
+//        Variable variable = (Variable) at.symbolOfNode.get(id);
+//        // 引用消解时再将变量放入作用域的符号表中
+//        if (variable.isClassMember() && variable.isStatic()) {
+//            ((Class)scope).addStatic(variable);
+//        } else {
+//            scope.addSymbol(variable);
+//        }
     }
 
     @Override
