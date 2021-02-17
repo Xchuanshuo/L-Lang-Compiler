@@ -19,6 +19,10 @@ public class Literal extends Expr {
 
     public static Literal parse(PeekTokenIterator it) throws ParseException {
         Token token = it.next();
+        return createLiteral(token);
+    }
+
+    public static Literal createLiteral(Token token) {
         if (token.isLiteral()) {
             switch (token.getTokenType()) {
                 case OCT_LITERAL:

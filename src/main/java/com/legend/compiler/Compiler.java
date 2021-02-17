@@ -49,18 +49,16 @@ public class Compiler {
         } else if (arg.binFile != null) {
             runByBin(arg.binFile);
         }
-//        compile(path);
-//        runByBin(path);
     }
 
     private static void dumpHelp() {
-        System.out.println("-s           Input a source file and output bin file.");
-        System.out.println("-i           Input a binary file and execute.");
-        System.out.println("-tokens      Dumps tokens and quit.");
-        System.out.println("-ast         Dumps ast and quit.");
-        System.out.println("-ir          Dumps IR and quit.");
-        System.out.println("-asm         Dumps ASM and quit.");
-        System.out.println("-help        Prints the help message and quit.");
+        System.out.println("--s           Input a source file and output bin file.");
+        System.out.println("--i           Input a binary file and execute.");
+        System.out.println("--tokens      Dumps tokens and quit.");
+        System.out.println("--ast         Dumps ast and quit.");
+        System.out.println("--ir          Dumps IR and quit.");
+        System.out.println("--asm         Dumps ASM and quit.");
+        System.out.println("--help        Prints the help message and quit.");
     }
 
     private static void dumpTokens(Args arg) throws Exception {
@@ -99,6 +97,8 @@ public class Compiler {
 //        astInterpreter(at, program);
         TACProgram tacProgram = generateIR(at, program);
         ByteCodeProgram byteCodeProgram = generateByteCode(tacProgram);
+//        MetadataArea.getInstance().dumpConstantPool();
+//        byteCodeProgram.dumpWithComments();
         output(byteCodeProgram, path.replace(".l", ".bin"));
 //        run(byteCodeProgram);
     }
@@ -118,6 +118,7 @@ public class Compiler {
             dos.writeInt(metaDataBytes.length);
             dos.write(metaDataBytes);
             dos.flush();
+            System.out.println(String.format("compile success~, {%s}", path));
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -194,9 +195,6 @@ public class Compiler {
         ByteCodeGenerator codeGenerator = new ByteCodeGenerator(tacProgram);
         codeGenerator.generate();
         ByteCodeProgram byteCodeProgram = codeGenerator.getProgram();
-
-        MetadataArea.getInstance().dumpConstantPool();
-        byteCodeProgram.dumpWithComments();
         return byteCodeProgram;
     }
 

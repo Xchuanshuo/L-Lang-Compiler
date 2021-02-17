@@ -4,6 +4,7 @@ import com.legend.exception.ParseException;
 import com.legend.lexer.Keyword;
 import com.legend.lexer.Token;
 import com.legend.lexer.TokenType;
+import com.legend.optimize.ConstFold;
 import com.legend.parser.common.PeekTokenIterator;
 import com.legend.parser.common.PriorityTable;
 
@@ -13,6 +14,7 @@ import java.util.List;
 import static com.legend.lexer.Keyword.Key.IF;
 import static com.legend.lexer.Keyword.Key.SUPER;
 import static com.legend.lexer.Keyword.Key.THIS;
+import static java.lang.Enum.valueOf;
 
 /**
  * @author Legend
@@ -134,16 +136,9 @@ public class Expr extends ASTNode {
     }
 
     public static ASTNode parse(PeekTokenIterator it) throws ParseException {
-        return e(it, 0);
+        Expr expr = (Expr) e(it, 0);
+        return ConstFold.constFold(expr);
     }
-
-//    public Expr constFold(Expr expr) {
-//        switch (expr.token.getTokenType()) {
-//            case ADD: break;
-//            case SUB: break;
-//        }
-//
-//    }
 
     public boolean isDotExpr() {
         if (token == null) return false;
@@ -153,6 +148,10 @@ public class Expr extends ASTNode {
     public boolean isAssignExpr() {
         if (token == null) return false;
         return token.getText().equals("=");
+    }
+
+    public boolean isBinExpr() {
+        return astNodeType == ASTNodeType.BINARY_EXP;
     }
 
     public Expr expr(int idx) {
