@@ -24,9 +24,9 @@ public class Args {
         }
         for (int i = 0;i < args.length;i++) {
             String a = args[i];
-            if ("--s".equals(a)) {
+            if ("-s".equals(a)) {
                 arg.srcFile = args[++i];
-            } else if ("--i".equals(a)) {
+            } else if ("-i".equals(a)) {
                 arg.binFile = args[++i];
             } else if ("--tokens".equals(a)) {
                 arg.dumpTokens = true;

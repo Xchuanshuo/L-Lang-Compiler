@@ -52,8 +52,8 @@ public class Compiler {
     }
 
     private static void dumpHelp() {
-        System.out.println("--s           Input a source file and output bin file.");
-        System.out.println("--i           Input a binary file and execute.");
+        System.out.println("-s            Input a source file and output bin file.");
+        System.out.println("-i            Input a binary file and execute.");
         System.out.println("--tokens      Dumps tokens and quit.");
         System.out.println("--ast         Dumps ast and quit.");
         System.out.println("--ir          Dumps IR and quit.");
