@@ -1,5 +1,8 @@
 package com.legend.parser;
 
+import static com.legend.compiler.Args.LIB;
+import static com.legend.compiler.Args.MAIN;
+
 /**
  * @author Legend
  * @data by on 20-11-22.
@@ -7,7 +10,8 @@ package com.legend.parser;
  */
 public class ModuleLoader {
 
-    private static final String ROOT_PATH = "/home/legend/Projects/IdeaProjects/2020/编译原理/L-Lang-Compiler/example";
+    private static final String ROOT_PATH =
+            "/home/legend/Projects/IdeaProjects/2020/编译原理/L-Lang-Compiler/example";
 
     public static Program load(String moduleName) {
         try {
@@ -20,7 +24,13 @@ public class ModuleLoader {
 
     private static String getPath(String moduleName) {
         moduleName = moduleName.replaceAll("\\.", "/");
-        return ROOT_PATH + "/" + moduleName + ".l";
+        String rootPath = "";
+        if (moduleName.startsWith("sys")) {
+            rootPath = System.getProperty(LIB);
+        } else {
+            rootPath = System.getProperty(MAIN);
+        }
+        return rootPath + "/" + moduleName + ".l";
     }
 
     public static void main(String[] args) throws Exception {

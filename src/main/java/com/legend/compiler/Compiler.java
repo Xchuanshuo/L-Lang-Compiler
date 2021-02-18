@@ -58,6 +58,7 @@ public class Compiler {
         System.out.println("--ast         Dumps ast and quit.");
         System.out.println("--ir          Dumps IR and quit.");
         System.out.println("--asm         Dumps ASM and quit.");
+        System.out.println("--main        Set the user main path.");
         System.out.println("--help        Prints the help message and quit.");
     }
 
