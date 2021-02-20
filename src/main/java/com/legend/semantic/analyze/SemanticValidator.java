@@ -127,7 +127,7 @@ public class SemanticValidator extends BaseASTListener {
         if (ast.getParent() instanceof Statement) {
             // break or return statement -> statement
             parent = ast.getParent();
-            if (parent.lastChild() != ast) {
+            if (parent.lastChild() != ast && ((Statement)parent).IF() == null) {
                 return true;
             }
         } else {
