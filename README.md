@@ -1,6 +1,8 @@
 # L-Lang-Compiler
 L-Lang 一个类Java的面向对象语言, 去除了new, 每行结尾的分号等冗余的字符
 实现了函数作为一等公民,可以赋值、作为函数参数，支持闭包等特性, 具体示例查看example目录
+
+[![vscode运行](https://z3.ax1x.com/2021/03/26/6XhgW4.png)](https://imgtu.com/i/6XhgW4)
 ### 示例
 #### 函数
 ``` Java

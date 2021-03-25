@@ -7,6 +7,10 @@ import com.legend.semantic.Function;
 import com.legend.semantic.Type;
 import com.legend.semantic.VoidType;
 
+import java.util.Deque;
+import java.util.LinkedList;
+import java.util.Stack;
+
 /**
  * @author Legend
  * @data by on 20-11-18.
