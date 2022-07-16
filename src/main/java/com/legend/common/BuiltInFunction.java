@@ -2,10 +2,8 @@ package com.legend.common;
 
 import com.legend.semantic.PrimitiveType;
 import com.legend.semantic.Type;
-import com.sun.org.apache.regexp.internal.RE;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * @author Legend
